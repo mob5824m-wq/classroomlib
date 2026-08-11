@@ -1,0 +1,14 @@
+{
+  "name": "Room 204 Classroom Library",
+  "short_name": "Class Library",
+  "description": "Browse, check out, and return books in our classroom library.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f6f8f9",
+  "theme_color": "#0f8a8a",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

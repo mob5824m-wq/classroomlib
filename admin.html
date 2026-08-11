@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+ <title>Admin · Our Classroom Library</title>
+ <link rel="stylesheet" href="css/style.css?v=24">
+ <script defer src="js/store.js?v=24"></script>
+ <script defer src="js/app.js?v=24"></script>
+  <script defer src="js/a11y.js?v=24"></script>
+ <script defer src="js/barcode.js?v=24"></script>
+ <script defer src="js/covers.js?v=24"></script>
+ <script defer src="js/scanner.js?v=24"></script>
+ <script defer src="js/scan.js?v=24"></script>
+ <script defer src="js/admin.js?v=24"></script>
+</head>
+<body>
+ <div id="scan-mode" hidden></div>
+ <header class="topbar">
+ <div class="topbar-inner">
+ <a class="brand" href="index.html">
+ <span class="logo"></span>
+ <span>Room 204 Library<small>Admin</small></span></a>
+ <nav class="nav">
+ <a data-page="index.html" href="index.html">Home</a>
+ <a data-page="catalog.html" href="catalog.html">Catalog</a>
+        <a data-page="kiosk.html" href="kiosk.html">Checkout</a>
+ <a data-page="how-to-check-out.html" href="how-to-check-out.html">How to Check Out</a>
+ <a data-page="my-library.html" href="my-library.html">My Library</a>
+ <a data-page="admin.html" href="admin.html">Admin</a>
+ </nav>
+ <div id="user-area"></div>
+ </div>
+ </header>
+
+ <main class="container">
+ <div class="page-head" style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap">
+ <div>
+ <h1> Admin Dashboard</h1>
+ <p class="muted" id="admin-who">Librarian controls for the classroom library.</p>
+ </div>
+ <button class="btn btn-primary" onclick="tryScan()"> Scan a book</button>
+ </div>
+
+ <div id="admin-logged-out" class="card" hidden>
+ <div class="empty">
+ <div class="big"></div>
+ <h3>Admin access only</h3>
+ <p>Sign in with an admin account to manage books, students, and loans.</p>
+ <button class="btn btn-primary" onclick="openLogin()">Sign in</button>
+ </div>
+ </div>
+
+ <div id="admin-dash" hidden>
+ <!-- Tabs -->
+ <div class="filters" id="admin-tabs">
+ <button class="chip" data-tab="overview">Overview</button>
+ <button class="chip" data-tab="announcements">Announcements</button>
+ <button class="chip" data-tab="books">Books</button>
+ <button class="chip" data-tab="users">Students</button>
+ <button class="chip" data-tab="loans">Loans &amp; Overdue</button>
+        <button class="chip" data-tab="holds">Holds</button>
+        <button class="chip" data-tab="requests">Requests</button>
+        <button class="chip" data-tab="charges">Charges</button>
+        <button class="chip" data-tab="reminders">Reminders</button>
+        <button class="chip" data-tab="reports">Reports</button>
+        <button class="chip" data-tab="kiosk">Kiosk</button>
+        <button class="chip" data-tab="home">Home Page</button>
+        <button class="chip" data-tab="policy">Loan Policy</button>
+        <button class="chip" data-tab="pricing">Pricing</button>
+        <button class="chip" data-tab="accessibility">Display</button>
+        <button class="chip" data-tab="account">My Account</button>
+      </div>
+
+ <!-- Overview -->
+ <section class="tab-panel" id="tab-overview">
+ <div class="stat-grid">
+ <div class="stat"><div class="num" id="o-books">0</div><div class="lbl">Total books</div></div>
+ <div class="stat"><div class="num" id="o-copies">0</div><div class="lbl">Total copies</div></div>
+ <div class="stat"><div class="num" id="o-avail">0</div><div class="lbl">Available now</div></div>
+ <div class="stat"><div class="num" id="o-out">0</div><div class="lbl">Checked out</div></div>
+ <div class="stat hot"><div class="num" id="o-overdue">0</div><div class="lbl">Overdue</div></div>
+ <div class="stat"><div class="num" id="o-students">0</div><div class="lbl">Students</div></div>
+ <div class="stat"><div class="num" id="o-holds">0</div><div class="lbl">Holds</div></div>
+ </div>
+ <div class="card">
+ <div class="card-head"><h3> Overdue right now</h3><button class="btn btn-outline btn-sm" data-goto="loans">View all loans</button></div>
+ <div id="o-overdue-list"><p class="muted">No overdue books. Nice!</p></div>
+ </div>
+ <div class="card">
+ <div class="card-head"><h3> Most popular books</h3></div>
+ <div id="o-popular"></div>
+ </div>
+ </section>
+
+ <!-- Announcements -->
+ <section class="tab-panel" id="tab-announcements" hidden>
+ <div class="card">
+ <div class="card-head">
+ <h3>Announcements</h3>
+ <button class="btn btn-primary" data-add-announcement>+ Add announcement</button>
+ </div>
+ <p class="muted small">These show on the home page. Students can't edit them — only you can.</p>
+ <div id="announcements-manage"><p class="muted">Loading…</p></div>
+ </div>
+ </section>
+
+ <!-- Books -->
+ <section class="tab-panel" id="tab-books" hidden>
+ <div class="card">
+ <div class="card-head">
+ <h3>Manage books</h3>
+ <div style="display:flex;gap:8px;flex-wrap:wrap">
+ <button class="btn btn-outline" data-print-barcodes>Print barcodes</button>
+ <button class="btn btn-soft" data-autofill-all> Auto-fill descriptions</button>
+ <button class="btn btn-primary" data-add-book>+ Add book</button>
+ </div>
+ </div>
+ <div class="table-wrap">
+ <table>
+ <thead><tr><th>Title</th><th>Copies</th><th>Avail</th><th>Type</th><th>Price</th><th>Replacement</th><th>Actions</th></tr></thead>
+ <tbody id="books-tbody"></tbody>
+ </table>
+ </div>
+ </div>
+ </section>
+
+ <!-- Users -->
+ <section class="tab-panel" id="tab-users" hidden>
+ <div class="card">
+ <div class="card-head">
+ <h3>Manage students &amp; accounts</h3>
+ <div style="display:flex;gap:8px">
+ <button class="btn btn-amber" data-bulk-users> Bulk add</button>
+ <button class="btn btn-primary" data-add-user>+ Add student</button>
+ </div>
+ </div>
+ <div class="table-wrap">
+ <table>
+ <thead><tr><th>Name</th><th>Username</th><th>Grade</th><th>Class</th><th>Role</th><th>Out</th><th>Actions</th></tr></thead>
+ <tbody id="users-tbody"></tbody>
+ </table>
+ </div>
+ </div>
+ </section>
+
+ <!-- Loans -->
+ <section class="tab-panel" id="tab-loans" hidden>
+ <div class="card">
+ <div class="card-head"><h3>All active loans</h3></div>
+ <div class="table-wrap"><table><thead><tr><th>Book</th><th>Student</th><th>Due date</th><th>Status</th><th>Actions</th></tr></thead><tbody id="loans-tbody"></tbody></table></div>
+ </div>
+ <div class="card">
+ <div class="card-head"><h3>Recent returns</h3></div>
+ <div class="table-wrap"><table><thead><tr><th>Book</th><th>Student</th><th>Returned</th></tr></thead><tbody id="returns-tbody"></tbody></table></div>
+ </div>
+ </section>
+
+ <!-- Holds -->
+ <section class="tab-panel" id="tab-holds" hidden>
+ <div class="card">
+ <div class="card-head"><h3>Hold queue</h3></div>
+ <div class="table-wrap"><table><thead><tr><th>Book</th><th>Student</th><th>Placed</th><th>Position</th><th>Actions</th></tr></thead><tbody id="holds-tbody"></tbody></table></div>
+ </div>
+ </section>
+
+      <!-- Requests -->
+      <section class="tab-panel" id="tab-requests" hidden>
+        <div class="card">
+          <div class="card-head"><h3>Book requests from students</h3></div>
+          <div id="requests-list"><p class="muted">Loading…</p></div>
+        </div>
+      </section>
+
+      <!-- Charges -->
+      <section class="tab-panel" id="tab-charges" hidden>
+        <div class="card">
+          <div class="card-head"><h3>Lost / damaged book charges</h3></div>
+          <div id="charges-list"><p class="muted">Loading…</p></div>
+        </div>
+      </section>
+
+      <!-- Reminders -->
+      <section class="tab-panel" id="tab-reminders" hidden>
+        <div class="card">
+          <div class="card-head"><h3>Overdue reminders</h3>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-outline btn-sm" data-refresh-remind>Refresh</button>
+              <button class="btn btn-primary btn-sm" data-send-remind>Send reminders</button>
+            </div>
+          </div>
+          <p class="muted small">Reminders are computed on the server and logged. To email or text students automatically, plug a provider into <code>server.js</code> (see README).</p>
+          <div id="reminders-list"><p class="muted">Loading…</p></div>
+        </div>
+      </section>
+
+      <!-- Reports -->
+      <section class="tab-panel" id="tab-reports" hidden>
+        <div class="card">
+          <div class="card-head"><h3>Reports &amp; CSV export</h3>
+            <button class="btn btn-outline btn-sm" data-export-all-csv>Export all as CSV</button>
+          </div>
+          <p class="muted small">Each report below can be downloaded individually as a CSV (opens in Excel/Sheets).</p>
+          <div id="reports-holder"></div>
+        </div>
+      </section>
+
+      <!-- Kiosk -->
+      <section class="tab-panel" id="tab-kiosk" hidden>
+        <div class="card">
+          <div class="card-head"><h3>Checkout kiosk</h3></div>
+          <div class="filters" style="margin-bottom:12px">
+            <label class="field" style="flex-direction:row;align-items:center;gap:8px;font-weight:600">
+              <input type="checkbox" id="kiosk-enabled"> Kiosk checkout is allowed
+            </label>
+          </div>
+          <h3 style="margin-bottom:6px">Kiosk activity log</h3>
+          <div id="kiosk-log"><p class="muted">Loading…</p></div>
+        </div>
+      </section>
+
+      <!-- Home Page -->
+      <section class="tab-panel" id="tab-home" hidden>
+        <div class="card">
+          <div class="card-head"><h3>Home page settings</h3><button class="btn btn-primary btn-sm" id="save-home-settings">Save</button></div>
+          <div class="field" style="margin-bottom:14px"><label>Book of the week</label>
+            <select id="featured-book"></select>
+            <p class="muted small">Shown in a spotlight section on the home page.</p>
+          </div>
+          <div class="filters">
+            <label class="field" style="flex-direction:row;align-items:center;gap:8px;font-weight:600">
+              <input type="checkbox" id="hide-demo-accounts"> Hide demo accounts on the sign-in screen
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Policy -->
+      <section class="tab-panel" id="tab-policy" hidden>
+ <div class="card">
+ <div class="card-head"><h3>Loan policy</h3><button class="btn btn-primary" id="save-policy">Save policy</button></div>
+ <div class="table-wrap">
+ <table>
+ <thead><tr><th>Book type</th><th>Base loan (days)</th></tr></thead>
+ <tbody id="policy-type-tbody"></tbody>
+ </table>
+ </div>
+ <div class="filters" style="margin-top:16px">
+ <div class="field"><label>Max books per student</label><input id="p-maxloans" type="number" min="1" max="10"></div>
+ <div class="field"><label>Max holds per student</label><input id="p-maxholds" type="number" min="1" max="10"></div>
+ <div class="field"><label>Overdue grace days</label><input id="p-grace" type="number" min="0" max="10"></div>
+ </div>
+ <p class="small muted">Hot books automatically borrow 25% less time and rising stars 10% less, so everyone gets a turn.</p>
+ </div>
+ </section>
+
+ <!-- Pricing -->
+ <section class="tab-panel" id="tab-pricing" hidden>
+ <div class="card">
+ <div class="card-head"><h3>Condition multipliers</h3><button class="btn btn-primary" id="save-condition">Save</button></div>
+ <p class="small muted">Replacement price = base price × condition × popularity boost.</p>
+ <div class="table-wrap"><table><thead><tr><th>Condition</th><th>Multiplier</th></tr></thead><tbody id="cond-tbody"></tbody></table></div>
+ </div>
+ </section>
+
+ <section class="card">
+ <div class="card-head"><h3>Danger zone</h3></div>
+ <p class="muted small">Reset all demo data (books, students, loans, holds) back to the starting point.</p>
+ <button class="btn btn-danger" id="reset-data">Reset demo data</button>
+ </section>
+
+ <!-- My Account -->
+ <section class="tab-panel" id="tab-account" hidden>
+ <div class="card">
+ <div class="card-head"><h3>My account</h3></div>
+ <p class="muted small">Update the display name that appears across the site (e.g. in the top bar and in announcements).</p>
+ <form id="account-form">
+ <label>Display name
+ <input id="account-name" type="text" placeholder="Your name">
+ </label>
+ <button class="btn btn-primary" type="submit">Save name</button>
+ </form>
+ <p id="account-msg" class="small muted" style="margin-top:10px"></p>
+ </div>
+ </section>
+ </div>
+ </main>
+
+ <!-- Book editor modal -->
+ <div class="modal" id="book-modal">
+ <div class="modal-card wide" id="book-modal-body"></div>
+ </div>
+ <!-- User editor modal -->
+ <div class="modal" id="user-modal">
+ <div class="modal-card" id="user-modal-body"></div>
+ </div>
+ <!-- Bulk add students modal -->
+ <div class="modal" id="bulk-modal">
+ <div class="modal-card" id="bulk-modal-body"></div>
+ </div>
+
+ <footer>
+ <div class="container">
+ <strong>Room 204 Classroom Library</strong> · Admin console
+ </div>
+ </footer>
+</body>
+</html>

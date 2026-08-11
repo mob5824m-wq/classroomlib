@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta name="theme-color" content="#0f8a8a">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+ <title>Home · Our Classroom Library</title>
+ <link rel="stylesheet" href="css/style.css?v=24">
+ <script defer src="js/store.js?v=24"></script>
+ <script defer src="js/app.js?v=24"></script>
+  <script defer src="js/a11y.js?v=24"></script>
+ <script defer src="js/covers.js?v=24"></script>
+ <script defer src="js/home.js?v=24"></script>
+</head>
+<body>
+ <header class="topbar">
+ <div class="topbar-inner">
+ <a class="brand" href="index.html">
+ <span class="logo"></span>
+ <span>Room 204 Library<small>Grade 7–8</small></span></a>
+ <nav class="nav">
+ <a data-page="index.html" href="index.html">Home</a>
+ <a data-page="catalog.html" href="catalog.html">Catalog</a>
+        <a data-page="kiosk.html" href="kiosk.html">Checkout</a>
+ <a data-page="how-to-check-out.html" href="how-to-check-out.html">How to Check Out</a>
+ <a data-page="my-library.html" href="my-library.html">My Library</a>
+ </nav>
+ <div id="user-area"></div>
+ </div>
+ </header>
+
+ <main class="container">
+ <section class="hero">
+ <div class="emoji-bg"></div>
+ <h1>Welcome to your Classroom Library!</h1>
+ <p>
+ Your adventure starts here. Browse our shelves, find a story you'll love,
+ and check out books to take home. Every book is a doorway to somewhere new —
+ what will you discover today?</p>
+ <div class="hero-actions">
+ <a class="btn btn-amber" href="catalog.html"> Browse the Catalog</a>
+ <a class="btn btn-ghost" href="how-to-check-out.html">Learn to Check Out</a>
+ </div>
+ </section>
+
+ <section class="stat-grid" id="stats">
+ <div class="stat"><div class="num" id="stat-books">–</div><div class="lbl">Books on our shelves</div></div>
+ <div class="stat"><div class="num" id="stat-avail">–</div><div class="lbl">Available right now</div></div>
+ <div class="stat hot"><div class="num" id="stat-hot">–</div><div class="lbl">Hot picks </div></div>
+ <div class="stat"><div class="num" id="stat-students">–</div><div class="lbl">Readers in our class</div></div>
+ </section>
+
+ <div class="grid" style="grid-template-columns: repeat(auto-fit,minmax(300px,1fr))">
+ <section class="card">
+ <div class="card-head">
+ <h2> Mrs. Alvarez's Picks</h2>
+ <a class="small" href="catalog.html">See all →</a>
+ </div>
+ <p class="muted small">A few favorites to get you started. Look for the stars — your librarian loved these!</p>
+ <div id="featured"></div>
+ </section>
+
+ <section class="card">
+ <div class="card-head"><h2> How it works</h2></div>
+ <p>Checking out a book takes about 30 seconds. Here's the short version:</p>
+ <div class="steps" style="grid-template-columns:1fr;gap:12px;margin:0">
+ <div class="step" style="text-align:left;display:flex;gap:14px;align-items:center">
+ <span class="icon">1</span><span><strong>Sign in</strong> — use your class username and password.</span>
+ </div>
+ <div class="step" style="text-align:left;display:flex;gap:14px;align-items:center">
+ <span class="icon">2</span><span><strong>Pick a book</strong> — tap <strong>Check out</strong> on any available book.</span>
+ </div>
+ <div class="step" style="text-align:left;display:flex;gap:14px;align-items:center">
+ <span class="icon">3</span><span><strong>Read & return</strong> — bring it back before its due date!</span>
+ </div>
+ </div>
+ <a class="btn btn-outline btn-block" style="margin-top:14px" href="how-to-check-out.html">See the full guide →</a>
+ </section>
+
+ <section class="card">
+ <div class="card-head"><h2>Announcements</h2></div>
+ <div id="announcements-list" style="color:var(--ink-soft)"><p class="muted">Loading…</p></div>
+ </section>
+ </div>
+
+ <section class="card" id="book-of-week-wrap" style="margin-bottom:26px;border-left:6px solid var(--amber);display:none">
+  <div class="card-head"><h2>Book of the Week</h2></div>
+  <div id="book-of-week"></div>
+</section>
+
+<section class="card" style="margin-top:26px">
+ <div class="card-head"><h2>Top rated</h2><a class="small" href="catalog.html">Browse all →</a></div>
+ <div id="top-rated" class="book-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))"></div>
+ </section>
+
+ <section class="card">
+ <div class="card-head"><h2>Recent reviews</h2></div>
+ <div id="recent-reviews"></div>
+ </section>
+ </main>
+
+ <footer>
+ <div class="container">
+ <strong>Room 204 Classroom Library</strong> · Built for our Grade 7–8 readers.
+ <a href="how-to-check-out.html">How to Check Out</a> ·
+ <a href="catalog.html">Catalog</a>
+ </div>
+ </footer>
+</body>
+</html>

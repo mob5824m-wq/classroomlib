@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+ <title>My Library · Our Classroom Library</title>
+ <link rel="stylesheet" href="css/style.css?v=24">
+ <script defer src="js/store.js?v=24"></script>
+ <script defer src="js/app.js?v=24"></script>
+  <script defer src="js/a11y.js?v=24"></script>
+ <script defer src="js/covers.js?v=24"></script>
+ <script defer src="js/mylibrary.js?v=24"></script>
+</head>
+<body>
+ <header class="topbar">
+ <div class="topbar-inner">
+ <a class="brand" href="index.html">
+ <span class="logo"></span>
+ <span>Room 204 Library<small>Grade 7–8</small></span></a>
+ <nav class="nav">
+ <a data-page="index.html" href="index.html">Home</a>
+ <a data-page="catalog.html" href="catalog.html">Catalog</a>
+        <a data-page="kiosk.html" href="kiosk.html">Checkout</a>
+ <a data-page="how-to-check-out.html" href="how-to-check-out.html">How to Check Out</a>
+ <a data-page="my-library.html" href="my-library.html">My Library</a>
+ </nav>
+ <div id="user-area"></div>
+ </div>
+ </header>
+
+ <main class="container">
+ <div class="page-head">
+ <h1> My Library</h1>
+ <p class="muted" id="who">Sign in to see the books you've checked out.</p>
+ </div>
+
+ <div id="logged-out" class="card" hidden>
+ <div class="empty">
+ <div class="big"></div>
+ <h3>Sign in to see your books</h3>
+ <p>This is where your checked-out books, due dates, and holds live.</p>
+ <button class="btn btn-primary" onclick="openLogin()">Sign in</button>
+ </div>
+ </div>
+
+ <div id="dashboard" hidden>
+ <div class="stat-grid">
+ <div class="stat"><div class="num" id="m-count">0</div><div class="lbl">Books out</div></div>
+ <div class="stat"><div class="num" id="m-due">–</div><div class="lbl">Due soonest</div></div>
+ <div class="stat"><div class="num" id="m-overdue">0</div><div class="lbl">Overdue</div></div>
+ <div class="stat"><div class="num" id="m-holds">0</div><div class="lbl">Holds placed</div></div>
+ </div>
+
+ <section class="card" style="margin-bottom:18px">
+ <div class="card-head"><h2>Your name</h2></div>
+ <p class="muted small">Change the display name that shows next to your books and reviews.</p>
+ <form id="myname-form" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+ <input id="myname-input" type="text" maxlength="60" style="flex:1;min-width:200px">
+ <button class="btn btn-primary" type="submit">Save name</button>
+ </form>
+ <p id="myname-msg" class="small muted" style="margin-top:8px"></p>
+ </section>
+
+ <section class="card">
+ <div class="card-head"><h2> Currently checked out</h2></div>
+ <div id="my-loans"><div class="empty"><div class="big"></div><p>You don't have any books out right now. Go find your next read!</p><a class="btn btn-outline" href="catalog.html">Browse the catalog →</a></div></div>
+ </section>
+
+ <section class="card">
+ <div class="card-head"><h2> Books on hold</h2></div>
+ <div id="my-holds"><div class="empty"><div class="big"></div><p>No holds right now. When a book you want is out, place a hold to get in line.</p></div></div>
+ </section>
+
+      <section class="card" id="charges-box" hidden>
+        <div class="card-head"><h2>Charges</h2></div>
+        <p class="muted small">These are replacement charges if a book was lost or damaged while checked out to you. See your librarian to resolve them.</p>
+        <div id="my-charges"></div>
+      </section>
+
+      <section class="card" id="return-box" hidden>
+ <div class="card-head"><h2> Return a book</h2></div>
+ <p class="muted">Scan or select a checked-out book to return it to the library.</p>
+ <div id="return-list"></div>
+ </section>
+ </div>
+ </main>
+
+ <footer>
+ <div class="container">
+ <strong>Room 204 Classroom Library</strong> · Reading is a superpower! 
+ </div>
+ </footer>
+</body>
+</html>

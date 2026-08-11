@@ -1,0 +1,15 @@
+# Caddy configuration for the Classroom Library (DuckDNS + free HTTPS).
+#
+# 1. Rename this file to "Caddyfile"
+# 2. Replace YOURSUB.yourname.duckdns.org with your real DuckDNS hostname
+# 3. Install Caddy (https://caddyserver.com/download)
+# 4. From this folder, run:  caddy run
+#
+# Caddy will automatically fetch and renew a free Let's Encrypt certificate
+# and route encrypted HTTPS traffic to the app on port 8080.
+# Forward router external port 443 -> this computer -> 8443 (or let Caddy use
+# 443 directly if it's free on this machine).
+
+YOURSUB.yourname.duckdns.org {
+	reverse_proxy localhost:8080
+}
