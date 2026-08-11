@@ -143,8 +143,36 @@ const Store = (function () {
       hideDemoAccounts: false, // #1: hide demo chips on the sign-in screen
       featuredBookId: "",      // #11: book of the week
       kioskEnabled: true,      // #3: allow the kiosk to check out
+      demoMode: true,          // demo examples shown
     },
   });
+
+  // Demo accounts are the seeded sample students (username "read123" demo set)
+  // plus the kiosk account. This lists the usernames to treat as demo.
+  function demoUsernames() {
+    return ["alex", "mia", "jamal", "sophia", "liam", "noah", "ava", "grace",
+      "ethan", "zoe", "david", "ella", "kiosk"];
+  }
+
+  // Permanently remove all demo student accounts (and their loans/holds/charges).
+  // The admin account is always kept.
+  function removeDemoAccounts(st) {
+    const keep = new Set(demoUsernames());
+    const removed = (st.users || []).filter(u => keep.has(u.username));
+    const removedIds = new Set(removed.map(u => u.id));
+    st.users = (st.users || []).filter(u => !removedIds.has(u.id));
+    st.loans = (st.loans || []).filter(l => !removedIds.has(l.userId));
+    st.holds = (st.holds || []).filter(h => !removedIds.has(h.userId));
+    st.charges = (st.charges || []).filter(c => !removedIds.has(c.userId));
+    st.reviews = (st.reviews || []).filter(r => !removedIds.has(r.userId));
+    st.requests = (st.requests || []).filter(r => !removedIds.has(r.userId));
+    // Also hide demo chips so they don't reference missing accounts.
+    st.settings = st.settings || {};
+    st.settings.demoMode = false;
+    st.settings.hideDemoAccounts = true;
+    save(st);
+    return removed.length;
+  }
 
   /* ---- Shared backend transport (with localStorage fallback) ---- */
   // Primary: the Node server keeps one shared state file so every device sees
@@ -725,6 +753,7 @@ const Store = (function () {
     getAnnouncements, addAnnouncement, updateAnnouncement, deleteAnnouncement,
     CLASSES, studentsByClass,
     kioskLogin, changePassword, updateProfile,
+    demoUsernames, removeDemoAccounts,
   };
 })();
 

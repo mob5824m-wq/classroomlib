@@ -72,7 +72,8 @@
     const modal = document.createElement("div");
     modal.id = "login-modal";
     modal.className = "modal";
-    const hideDemo = Store.getState().settings && Store.getState().settings.hideDemoAccounts;
+    const set = Store.getState().settings || {};
+    const hideDemo = !set.demoMode || set.hideDemoAccounts;
     modal.innerHTML = `
       <div class="modal-card login-card">
         <button class="modal-x" data-close>&times;</button>

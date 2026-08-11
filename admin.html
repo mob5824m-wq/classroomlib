@@ -5,15 +5,15 @@
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
  <title>Admin · Our Classroom Library</title>
- <link rel="stylesheet" href="css/style.css?v=24">
- <script defer src="js/store.js?v=24"></script>
- <script defer src="js/app.js?v=24"></script>
-  <script defer src="js/a11y.js?v=24"></script>
- <script defer src="js/barcode.js?v=24"></script>
- <script defer src="js/covers.js?v=24"></script>
- <script defer src="js/scanner.js?v=24"></script>
- <script defer src="js/scan.js?v=24"></script>
- <script defer src="js/admin.js?v=24"></script>
+ <link rel="stylesheet" href="css/style.css?v=25">
+ <script defer src="js/store.js?v=25"></script>
+ <script defer src="js/app.js?v=25"></script>
+  <script defer src="js/a11y.js?v=25"></script>
+ <script defer src="js/barcode.js?v=25"></script>
+ <script defer src="js/covers.js?v=25"></script>
+ <script defer src="js/scanner.js?v=25"></script>
+ <script defer src="js/scan.js?v=25"></script>
+ <script defer src="js/admin.js?v=25"></script>
 </head>
 <body>
  <div id="scan-mode" hidden></div>
@@ -233,6 +233,18 @@
               <input type="checkbox" id="hide-demo-accounts"> Hide demo accounts on the sign-in screen
             </label>
           </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="card-head"><h3>Demo mode</h3></div>
+          <p class="muted small">Demo mode shows example accounts (Alex, Mia, Jamal, …) and the Kiosk account so you can try the site before your real students are added. When you're ready to go live, turn it off to hide the demo quick-fill buttons.</p>
+          <div class="filters">
+            <label class="field" style="flex-direction:row;align-items:center;gap:8px;font-weight:600">
+              <input type="checkbox" id="demo-mode"> Demo mode is on
+            </label>
+          </div>
+          <button class="btn btn-danger" id="remove-demo-accounts" style="margin-top:10px">Remove all demo student accounts</button>
+          <p class="small muted" id="demo-msg" style="margin-top:8px"></p>
         </div>
       </section>
 

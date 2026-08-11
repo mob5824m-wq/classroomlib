@@ -164,14 +164,28 @@
     const st = S.getState();
     const sel = $("#featured-book");
     const hide = $("#hide-demo-accounts");
+    const demoMode = $("#demo-mode");
+    const removeBtn = $("#remove-demo-accounts");
+    const demoMsg = $("#demo-msg");
     if (!sel || !hide) return;
     sel.innerHTML = `<option value="">None</option>` + st.books.map(b => `<option value="${b.id}" ${st.settings && st.settings.featuredBookId === b.id ? "selected" : ""}>${esc(b.title)}</option>`).join("");
     hide.checked = !!(st.settings && st.settings.hideDemoAccounts);
+    if (demoMode) demoMode.checked = !(st.settings && st.settings.demoMode === false);
+    if (removeBtn) removeBtn.addEventListener("click", () => {
+      if (!confirm("Remove all demo student accounts (Alex, Mia, Jamal, etc.) and the Kiosk account? Their loans and charges will be removed too.")) return;
+      const st2 = S.getState();
+      const n = S.removeDemoAccounts(st2);
+      if (demoMode) demoMode.checked = false;
+      if (demoMsg) demoMsg.textContent = `Removed ${n} demo account${n === 1 ? "" : "s"}.`;
+      toast(`Removed ${n} demo account${n === 1 ? "" : "s"}.`);
+      render();
+    });
     $("#save-home-settings").onclick = () => {
       const st2 = S.getState();
       st2.settings = st2.settings || {};
       st2.settings.featuredBookId = sel.value;
       st2.settings.hideDemoAccounts = hide.checked;
+      if (demoMode) st2.settings.demoMode = demoMode.checked;
       S.save(st2);
       toast("Home page settings saved.");
     };
