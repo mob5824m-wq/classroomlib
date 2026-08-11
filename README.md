@@ -1,39 +1,55 @@
 # Room 204 Classroom Library
 
-A friendly, fully-functional **Classroom Library website** for Grade 7–8 students, built with **HTML, CSS, and vanilla JavaScript** (no frameworks, no build step, no server). Open it, and it works.
+A friendly, fully-functional **Classroom Library website** for Grade 7–8 students, built with **HTML, CSS, and vanilla JavaScript** (no frameworks, no build step). It runs on a small Node server that keeps one **shared** library (books, loans, holds, reviews, requests, charges) so every device sees the same data.
 
 ---
 
-## Quick start
+## Setup (three ways)
 
-1. Serve the folder (any static server works):
+You only need **Node.js** installed on the computer that runs the library. Everything else is included in this folder — no build step, no database to install.
 
- ```bash
- # easiest — use the included server (Node.js only)
- node server.js
+### A. Try it locally (quickest)
 
- # or any static server:
- # python3 -m http.server 8080
- # npx serve.
- ```
+```bash
+node server.js
+```
 
-2. Open **http://localhost:8080**
+Open **http://localhost:8080** and sign in with a demo account:
 
-> **Want to host it at home so it's usable at school?** See
-> **[HOSTING.md](HOSTING.md)** — it covers dynamic DNS (DuckDNS/No-IP),
-> Cloudflare Tunnel, HTTPS (needed for camera barcode scanning), and
-> auto-start on Windows/Linux.
+| Role | Username | Password |
+|------|----------|----------|
+| Librarian (Admin) | `admin` | `admin123` |
+| Student | `alex` | `read123` |
+| Student | `mia` | `read123` |
+| Student | `jamal` | `read123` |
 
-3. Sign in with a **demo account**:
+> **Data is stored in a shared `library-data.json` file** the server keeps, so it
+> survives restarts and is the same on every device that connects to the server.
+> Passwords are hashed and sessions use secure httpOnly cookies.
 
- | Role | Username | Password |
- |---------|----------|------------|
- | Librarian (Admin) | `admin` | `admin123` |
- | Student | `alex` | `read123` |
- | Student | `mia` | `read123` |
- | Student | `jamal` | `read123` |
+### B. Host it at home so it's usable at school (DuckDNS)
 
-> **How data is stored:** everything lives in your browser's `localStorage`, so there's zero setup — perfect for a classroom demo or a single shared computer. The downside is that data is per-browser. When you're ready, the data layer (`js/store.js`) is the *only* file you need to replace to plug in a real database/backend. See *"Going to a real backend"* below.
+1. **Pick a DuckDNS hostname** — at https://www.duckdns.org create one, e.g.
+   `myroomlibrary.duckdns.org`, and save your **token**.
+2. **Auto-update DuckDNS** so it always points at your home IP (DuckDNS
+   updater on Windows, a cron line on Linux/Raspberry Pi, or your router's
+   DDNS setting). Full commands are in [HOSTING.md](HOSTING.md).
+3. **Reserve a static LAN IP** for the computer in your router (e.g. `192.168.1.50`).
+4. **Open a port**: forward external `443` → that computer → `8443`.
+5. **Run Caddy for free HTTPS** (required for camera barcode scanning from
+   school). Rename `Caddyfile.example` → `Caddyfile`, put in your DuckDNS
+   hostname, then `caddy run`.
+6. **Start the app**: `node server.js` (listens on `0.0.0.0:8080`).
+7. **Test** on your phone's mobile data (not home Wi-Fi):
+   `https://myroomlibrary.duckdns.org`.
+
+> The first time the site is opened, `node server.js` prints the hostname it
+> was reached at, so you can confirm your DuckDNS address is routing correctly.
+
+### C. Public without port-forwarding (Cloudflare Tunnel)
+
+If your ISP uses carrier-grade NAT (can't open ports), use a free Cloudflare
+Tunnel instead — no port-forwarding, automatic HTTPS. See [HOSTING.md](HOSTING.md).
 
 ---
 
@@ -242,9 +258,15 @@ classroomlib/
 
 ---
 
-## Going to a real backend (optional)
+## Going beyond the built-in backend
 
-Only **`js/store.js`** talks to storage. Its public API (`getState`, `save`, `createLoan`, `returnLoan`, `createHold`, `renewLoan`, `authenticate`, `currentUser`, …) is a clean seam: re-implement those functions to call a REST API / database instead of `localStorage`, and every page keeps working unchanged. For a school you'd also want to move authentication server-side and use HTTPS.
+The app already ships with a **Node backend** (`server.js`) that keeps a shared
+JSON data file, hashes passwords, and uses httpOnly session cookies — enough for
+a classroom. If you ever outgrow it (many simultaneous writers, or need to run
+on a hosted platform), `js/store.js` is the single seam: re-implement its public
+API (`getState`, `save`, `createLoan`, `returnLoan`, `createHold`, `renewLoan`,
+`authenticate`, `currentUser`, …) to call a real database/API instead, and every
+page keeps working unchanged.
 
 ---
 
