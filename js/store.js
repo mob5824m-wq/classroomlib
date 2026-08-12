@@ -790,6 +790,8 @@ const Store = (function () {
     if (fields.name) club.name = fields.name.trim();
     if (typeof fields.description === "string") club.description = fields.description.trim();
     if (fields.bookId !== undefined) club.bookId = fields.bookId;
+    if (fields.pages !== undefined) club.pages = String(fields.pages).trim();
+    if (fields.dueDate !== undefined) club.dueDate = fields.dueDate || "";
     save(st);
     return { ok: true, club };
   }

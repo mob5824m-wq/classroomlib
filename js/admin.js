@@ -152,14 +152,16 @@
     if (createBtn) createBtn.addEventListener("click", () => groupForm(null));
     box.innerHTML = clubs.length
       ? `<div class="table-wrap"><table>
-          <thead><tr><th>Group</th><th>Book to get</th><th>Members</th><th>Posts</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Group</th><th>Book to get</th><th>Read</th><th>Due</th><th>Members</th><th>Actions</th></tr></thead>
           <tbody>${clubs.map(c => {
             const book = c.bookId ? st.books.find(b => b.id === c.bookId) : null;
+            const overdue = c.dueDate && new Date(c.dueDate + "T00:00:00").getTime() < Date.now();
             return `<tr>
               <td><strong>${esc(c.name)}</strong>${c.description ? `<div class="muted small">${esc(c.description)}</div>` : ""}</td>
               <td>${book ? `<strong>${esc(book.title)}</strong><div class="muted small">${esc(book.author)}</div>` : `<span class="badge badge-warn">No book</span>`}</td>
+              <td>${c.pages ? esc(c.pages) : "—"}</td>
+              <td>${c.dueDate ? (overdue ? `<span class="badge badge-overdue">${esc(c.dueDate)}</span>` : `<span class="badge badge-warn">${esc(c.dueDate)}</span>`) : "—"}</td>
               <td>${c.members.length}</td>
-              <td>${(st.clubPosts || []).filter(p => p.clubId === c.id).length}</td>
               <td>
                 <div class="row-actions">
                   <button class="btn btn-outline btn-sm" data-edit-group="${c.id}">Edit</button>
@@ -195,6 +197,14 @@
               ${st.books.map(b => `<option value="${b.id}" ${g && g.bookId === b.id ? "selected" : ""}>${esc(b.title)}</option>`).join("")}
             </select>
           </label>
+          <div class="filters" style="align-items:flex-end">
+            <div class="field" style="flex:1"><label>Pages to read</label>
+              <input name="pages" type="text" value="${esc(g && g.pages ? g.pages : "")}" placeholder="e.g. 1–50 or Chapters 1–3">
+            </div>
+            <div class="field"><label>Due date</label>
+              <input name="dueDate" type="date" value="${g && g.dueDate ? g.dueDate : ""}">
+            </div>
+          </div>
           <label>Students in this group
             <select name="members" multiple size="6" style="width:100%">
               ${students.map(u => `<option value="${u.id}" ${g && g.members.includes(u.id) ? "selected" : ""}>${esc(u.name)} (${esc(u.class || "")})</option>`).join("")}
@@ -221,7 +231,13 @@
         res = S.createClub(data.name, data.desc, S.currentUser().id, st);
         if (res.ok) { res.club.members = memberIds; res.club.bookId = data.book; S.save(st); }
       }
-      if (res.ok) { if (data.book) S.updateClub(res.club ? res.club.id : g.id, { bookId: data.book }, S.getState()); modal.classList.remove("open"); toast(g ? "Group updated." : "Reading group created!"); renderClubsAdmin(); }
+      if (res.ok) {
+        const cid = res.club ? res.club.id : g.id;
+        S.updateClub(cid, { bookId: data.book, pages: data.pages, dueDate: data.dueDate }, S.getState());
+        modal.classList.remove("open");
+        toast(g ? "Group updated." : "Reading group created!");
+        renderClubsAdmin();
+      }
       else toast(res.msg, "error");
     });
   }

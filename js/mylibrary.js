@@ -193,7 +193,9 @@
        </div>
        ${c.description ? `<p class="muted small">${esc(c.description)}</p>` : ""}
        ${book
-         ? `<div class="callout" style="padding:10px 12px"><span>BOOK</span><div><strong>Your book to get: ${esc(book.title)}</strong>${book.author ? `<div class="small muted">by ${esc(book.author)}</div>` : ""}</div></div>`
+         ? `<div class="callout" style="padding:10px 12px"><span>BOOK</span><div><strong>Your book to get: ${esc(book.title)}</strong>${book.author ? `<div class="small muted">by ${esc(book.author)}</div>` : ""}
+            ${(c.pages || c.dueDate) ? `<div class="small muted" style="margin-top:4px">Read: <strong>${esc(c.pages || "all")}</strong>${c.dueDate ? ` · Due: <strong>${esc(c.dueDate)}</strong>` : ""}</div>` : ""}
+           </div></div>`
          : `<p class="muted small">No book assigned yet — check back soon.</p>`}
        ${mine ? `<button class="btn btn-soft btn-sm" data-open-club="${c.id}">Open discussion</button>` : ""}
      </div>`;
