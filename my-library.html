@@ -5,12 +5,12 @@
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
  <title>My Library · Our Classroom Library</title>
- <link rel="stylesheet" href="css/style.css?v=25">
- <script defer src="js/store.js?v=25"></script>
- <script defer src="js/app.js?v=25"></script>
-  <script defer src="js/a11y.js?v=25"></script>
- <script defer src="js/covers.js?v=25"></script>
- <script defer src="js/mylibrary.js?v=25"></script>
+ <link rel="stylesheet" href="css/style.css?v=26">
+ <script defer src="js/store.js?v=26"></script>
+ <script defer src="js/app.js?v=26"></script>
+  <script defer src="js/a11y.js?v=26"></script>
+ <script defer src="js/covers.js?v=26"></script>
+ <script defer src="js/mylibrary.js?v=26"></script>
 </head>
 <body>
  <header class="topbar">
@@ -83,6 +83,32 @@
  <p class="muted">Scan or select a checked-out book to return it to the library.</p>
  <div id="return-list"></div>
  </section>
+
+      <section class="card">
+        <div class="card-head"><h2>Reading log</h2></div>
+        <p class="muted small">Track how much you read. Minutes and pages are optional — just fill in what you remember.</p>
+        <div class="stat-grid" style="margin-bottom:14px">
+          <div class="stat"><div class="num" id="rl-minutes">0</div><div class="lbl">Minutes read</div></div>
+          <div class="stat"><div class="num" id="rl-pages">0</div><div class="lbl">Pages read</div></div>
+          <div class="stat"><div class="num" id="rl-entries">0</div><div class="lbl">Log entries</div></div>
+          <div class="stat hot"><div class="num" id="rl-streak">0</div><div class="lbl">Day streak</div></div>
+        </div>
+        <form id="reading-form" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+          <div class="field" style="flex:1;min-width:180px"><label>Book</label>
+            <select id="reading-book"></select>
+          </div>
+          <div class="field"><label>Minutes</label><input id="reading-minutes" type="number" min="0" placeholder="30" style="width:90px"></div>
+          <div class="field"><label>Pages</label><input id="reading-pages" type="number" min="0" placeholder="20" style="width:90px"></div>
+          <button class="btn btn-primary" type="submit">Log reading</button>
+        </form>
+        <div id="reading-history" style="margin-top:14px"><p class="muted small">No reading logged yet.</p></div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h2>Book clubs</h2><button class="btn btn-outline btn-sm" id="create-club-btn">Create club</button></div>
+        <p class="muted small">Join a reading club to discuss a book with classmates.</p>
+        <div id="clubs-list"><p class="muted small">No clubs yet.</p></div>
+      </section>
  </div>
  </main>
 

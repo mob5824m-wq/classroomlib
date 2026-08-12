@@ -5,15 +5,15 @@
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
  <title>Admin · Our Classroom Library</title>
- <link rel="stylesheet" href="css/style.css?v=25">
- <script defer src="js/store.js?v=25"></script>
- <script defer src="js/app.js?v=25"></script>
-  <script defer src="js/a11y.js?v=25"></script>
- <script defer src="js/barcode.js?v=25"></script>
- <script defer src="js/covers.js?v=25"></script>
- <script defer src="js/scanner.js?v=25"></script>
- <script defer src="js/scan.js?v=25"></script>
- <script defer src="js/admin.js?v=25"></script>
+ <link rel="stylesheet" href="css/style.css?v=26">
+ <script defer src="js/store.js?v=26"></script>
+ <script defer src="js/app.js?v=26"></script>
+  <script defer src="js/a11y.js?v=26"></script>
+ <script defer src="js/barcode.js?v=26"></script>
+ <script defer src="js/covers.js?v=26"></script>
+ <script defer src="js/scanner.js?v=26"></script>
+ <script defer src="js/scan.js?v=26"></script>
+ <script defer src="js/admin.js?v=26"></script>
 </head>
 <body>
  <div id="scan-mode" hidden></div>
@@ -65,6 +65,7 @@
         <button class="chip" data-tab="charges">Charges</button>
         <button class="chip" data-tab="reminders">Reminders</button>
         <button class="chip" data-tab="reports">Reports</button>
+        <button class="chip" data-tab="clubs">Clubs</button>
         <button class="chip" data-tab="kiosk">Kiosk</button>
         <button class="chip" data-tab="home">Home Page</button>
         <button class="chip" data-tab="policy">Loan Policy</button>
@@ -203,6 +204,18 @@
           </div>
           <p class="muted small">Each report below can be downloaded individually as a CSV (opens in Excel/Sheets).</p>
           <div id="reports-holder"></div>
+        </div>
+      </section>
+
+      <!-- Clubs -->
+      <section class="tab-panel" id="tab-clubs" hidden>
+        <div class="card">
+          <div class="card-head"><h3>Book clubs &amp; reading groups</h3></div>
+          <div id="clubs-admin"><p class="muted">Loading…</p></div>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <div class="card-head"><h3>Reading totals by student</h3><button class="btn btn-outline btn-sm" id="reading-csv">Export CSV</button></div>
+          <div id="reading-admin"><p class="muted">Loading…</p></div>
         </div>
       </section>
 

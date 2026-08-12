@@ -119,10 +119,159 @@
  </div>`;
  }).join("");
 
+ // Reading log
+ renderReading(user, st);
+ // Book clubs
+ renderClubs(user, st);
+
  // Bind actions
  $$("[data-return]").forEach(b => b.addEventListener("click", () => doReturn(b.dataset.return)));
  $$("[data-remove-hold]").forEach(b => b.addEventListener("click", () => doRemoveHold(b.dataset.removeHold)));
  $$("[data-renew]").forEach(b => b.addEventListener("click", () => doRenew(b.dataset.renew)));
+ }
+
+ /* --------------------------- Reading log --------------------------- */
+ function renderReading(user, st) {
+   const summary = S.readingSummary(user.id, st);
+   $("#rl-minutes").textContent = summary.totalMinutes;
+   $("#rl-pages").textContent = summary.totalPages;
+   $("#rl-entries").textContent = summary.entries;
+   $("#rl-streak").textContent = summary.streak;
+
+   const sel = $("#reading-book");
+   if (sel) {
+     sel.innerHTML = `<option value="">General / no book</option>` + st.books.map(b => `<option value="${b.id}">${esc(b.title)}</option>`).join("");
+   }
+   const form = $("#reading-form");
+   if (form) {
+     form.onsubmit = (e) => {
+       e.preventDefault();
+       const minutes = $("#reading-minutes").value;
+       const pages = $("#reading-pages").value;
+       if ((!minutes || Number(minutes) <= 0) && (!pages || Number(pages) <= 0)) {
+         toast("Enter minutes or pages first.", "error");
+         return;
+       }
+       const bookId = sel ? sel.value : "";
+       const res = S.logReading(user.id, bookId, minutes || 0, pages || 0, S.getState());
+       if (res.ok) {
+         $("#reading-minutes").value = ""; $("#reading-pages").value = "";
+         toast("Reading logged!");
+         render();
+       } else toast(res.msg, "error");
+     };
+   }
+
+   const history = S.readingForUser(user.id, st).slice(0, 10);
+   const histBox = $("#reading-history");
+   if (history.length) {
+     histBox.innerHTML = `<div class="table-wrap"><table>
+       <thead><tr><th>Date</th><th>Book</th><th>Minutes</th><th>Pages</th></tr></thead>
+       <tbody>${history.map(r => {
+         const b = st.books.find(x => x.id === r.bookId);
+         return `<tr><td>${S.fmtDate(r.date)}</td><td>${b ? esc(b.title) : "General"}</td><td>${r.minutes || "—"}</td><td>${r.pages || "—"}</td></tr>`;
+       }).join("")}</tbody></table></div>`;
+   } else {
+     histBox.innerHTML = `<p class="muted small">No reading logged yet.</p>`;
+   }
+ }
+
+ /* --------------------------- Book clubs --------------------------- */
+ function renderClubs(user, st) {
+   const box = $("#clubs-list");
+   const all = (st.clubs || []).slice().sort((a, b) => b.created - a.created);
+   const createBtn = $("#create-club-btn");
+   if (createBtn) createBtn.onclick = () => createClub(user);
+   if (!all.length) { box.innerHTML = `<p class="muted small">No clubs yet.</p>`; return; }
+   box.innerHTML = all.map(c => {
+     const mine = c.members.includes(user.id);
+     const book = c.bookId ? st.books.find(b => b.id === c.bookId) : null;
+     return `<div class="card" style="margin-bottom:10px">
+       <div class="card-head">
+         <h3 style="margin:0">${esc(c.name)} <span class="badge" style="background:#eef1f3;color:var(--ink-soft)">${c.members.length} member${c.members.length === 1 ? "" : "s"}</span></h3>
+         ${mine ? `<button class="btn btn-danger-ghost btn-sm" data-leave-club="${c.id}">Leave</button>` : `<button class="btn btn-primary btn-sm" data-join-club="${c.id}">Join</button>`}
+       </div>
+       ${c.description ? `<p class="muted small">${esc(c.description)}</p>` : ""}
+       <p class="small">${book ? `Reading: <strong>${esc(book.title)}</strong>` : "No book assigned yet."}</p>
+       ${mine ? `<button class="btn btn-soft btn-sm" data-open-club="${c.id}">Open discussion</button>` : ""}
+     </div>`;
+   }).join("");
+
+   box.querySelectorAll("[data-join-club]").forEach(b => b.addEventListener("click", () => {
+     S.joinClub(b.dataset.joinClub, user.id, S.getState()); toast("Joined the club!"); render();
+   }));
+   box.querySelectorAll("[data-leave-club]").forEach(b => b.addEventListener("click", () => {
+     S.leaveClub(b.dataset.leaveClub, user.id, S.getState()); toast("Left the club."); render();
+   }));
+   box.querySelectorAll("[data-open-club]").forEach(b => b.addEventListener("click", () => openClub(b.dataset.openClub, user)));
+ }
+
+ function createClub(user) {
+   const body = $("#clubs-list");
+   body.innerHTML = `
+     <div class="card">
+       <button class="btn btn-ghost btn-sm" id="club-cancel" style="color:var(--ink-soft);border-color:var(--line)">Cancel</button>
+       <form id="club-create-form" style="margin-top:10px">
+         <label>Club name <input id="club-name" required placeholder="e.g. Fantasy Readers"></label>
+         <label>Description <textarea id="club-desc" rows="2" placeholder="What will your club read and discuss?"></textarea></label>
+         <button class="btn btn-primary" type="submit">Create club</button>
+       </form>
+     </div>`;
+   $("#club-cancel").addEventListener("click", render);
+   $("#club-create-form").addEventListener("submit", (e) => {
+     e.preventDefault();
+     const res = S.createClub($("#club-name").value, $("#club-desc").value, user.id, S.getState());
+     if (res.ok) { toast("Club created!"); render(); }
+     else toast(res.msg, "error");
+   });
+ }
+
+ function openClub(clubId, user) {
+   const st = S.getState();
+   const club = st.clubs.find(c => c.id === clubId);
+   if (!club) return;
+   let modal = document.getElementById("club-modal");
+   if (!modal) { modal = document.createElement("div"); modal.id = "club-modal"; modal.className = "modal"; document.body.appendChild(modal); }
+   const posts = S.clubPosts(clubId, st);
+   const isAdmin = user.role === "admin" || club.adminId === user.id;
+   modal.innerHTML = `
+     <div class="modal-card wide" id="club-modal-body">
+       <button class="modal-x" data-x>&times;</button>
+       <h2>${esc(club.name)}</h2>
+       ${club.description ? `<p class="muted small">${esc(club.description)}</p>` : ""}
+       ${club.bookId ? `<p class="small">Reading: <strong>${esc((st.books.find(b => b.id === club.bookId) || {}).title || "?")}</strong></p>` : ""}
+       ${isAdmin ? `<div class="filters" style="margin:10px 0">
+         <select id="club-book" style="flex:1"><option value="">No book</option>${st.books.map(b => `<option value="${b.id}" ${club.bookId === b.id ? "selected" : ""}>${esc(b.title)}</option>`).join("")}</select>
+         <button class="btn btn-soft btn-sm" id="club-set-book">Set book</button>
+         <button class="btn btn-danger-ghost btn-sm" id="club-delete">Delete club</button>
+       </div>` : ""}
+       <h3 style="margin:12px 0 6px">Discussion</h3>
+       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">${posts.map(p => {
+         const u = st.users.find(x => x.id === p.userId);
+         return `<div class="review"><div class="small"><strong>${esc(u ? u.name.split(" ")[0] : "Reader")}</strong> <span class="muted" style="font-weight:400">· ${timeAgo(p.date)}</span></div><div>${esc(p.text)}</div></div>`;
+       }).join("") || `<p class="muted small">No posts yet. Start the discussion!</p>`}</div>
+       <form id="club-post-form" style="display:flex;gap:8px">
+         <input id="club-post-text" placeholder="Share a thought…" style="flex:1">
+         <button class="btn btn-primary" type="submit">Post</button>
+       </form>
+     </div>`;
+   modal.classList.add("open");
+   modal.querySelector("[data-x]").addEventListener("click", () => modal.classList.remove("open"));
+   modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("open"); });
+   const setBook = modal.querySelector("#club-set-book");
+   if (setBook) setBook.addEventListener("click", () => {
+     S.updateClub(clubId, { bookId: modal.querySelector("#club-book").value }, S.getState());
+     toast("Club book updated."); openClub(clubId, user);
+   });
+   const del = modal.querySelector("#club-delete");
+   if (del) del.addEventListener("click", () => {
+     if (confirm("Delete this club and its discussion?")) { S.deleteClub(clubId, S.getState()); modal.classList.remove("open"); toast("Club deleted."); render(); }
+   });
+   modal.querySelector("#club-post-form").addEventListener("submit", (e) => {
+     e.preventDefault();
+     const res = S.addClubPost(clubId, user.id, modal.querySelector("#club-post-text").value, S.getState());
+     if (res.ok) openClub(clubId, user); else toast(res.msg, "error");
+   });
  }
 
  function loanRow(l) {

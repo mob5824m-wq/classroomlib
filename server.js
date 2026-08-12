@@ -51,6 +51,7 @@ function defaultState() {
   return {
     version: 1, books: [], users: [], loans: [], holds: [], reviews: [],
     requests: [], charges: [], announcements: [], kioskLog: [],
+    readingLog: [], clubs: [], clubPosts: [],
     settings: {
       maxLoansPerStudent: 4, maxHoldsPerStudent: 3, overdueGraceDays: 2,
       popularityWindowDays: 30, hideDemoAccounts: false, featuredBookId: "",

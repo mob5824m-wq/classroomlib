@@ -135,6 +135,9 @@ const Store = (function () {
     charges: [], // { id, bookId, userId, amount, reason, date, paid, loanId }
     announcements: [], // { id, text, date }
     kioskLog: [], // { id, time, action, studentName, bookTitle }
+    readingLog: [], // { id, userId, bookId, date, minutes, pages }
+    clubs: [], // { id, name, description, adminId, members:[userId], bookId, created }
+    clubPosts: [], // { id, clubId, userId, text, date }
     settings: { // adjustable by admin
       maxLoansPerStudent: 4,
       maxHoldsPerStudent: 3,
@@ -735,6 +738,100 @@ const Store = (function () {
     return map;
   }
 
+ /* --------------------------- Reading log ------------------------------ */
+  function logReading(userId, bookId, minutes, pages, st) {
+    if (!userId) return { ok: false, msg: "Please sign in." };
+    st.readingLog = st.readingLog || [];
+    st.readingLog.push({
+      id: uid(), userId, bookId: bookId || "", date: Date.now(),
+      minutes: Math.max(0, Math.round(Number(minutes) || 0)),
+      pages: Math.max(0, Math.round(Number(pages) || 0)),
+    });
+    save(st);
+    return { ok: true };
+  }
+
+  function readingForUser(userId, st) {
+    return (st.readingLog || []).filter(r => r.userId === userId).sort((a, b) => b.date - a.date);
+  }
+
+  // Totals for a student: total minutes, pages, books logged, streak (consecutive days).
+  function readingSummary(userId, st) {
+    const entries = readingForUser(userId, st);
+    const totalMinutes = entries.reduce((n, r) => n + (r.minutes || 0), 0);
+    const totalPages = entries.reduce((n, r) => n + (r.pages || 0), 0);
+    const days = new Set(entries.map(r => new Date(r.date).toDateString()));
+    const streaks = [...days].sort();
+    let streak = 0;
+    const today = new Date();
+    const yesterday = new Date(); yesterday.setDate(today.getDate() - 1);
+    let cursor = days.has(today.toDateString()) ? today : (days.has(yesterday.toDateString()) ? yesterday : null);
+    while (cursor) {
+      streak++;
+      const prev = new Date(cursor); prev.setDate(prev.getDate() - 1);
+      cursor = days.has(prev.toDateString()) ? prev : null;
+    }
+    return { totalMinutes, totalPages, entries: entries.length, streak };
+  }
+
+  /* ------------------------- Book clubs / groups ----------------------- */
+  function createClub(name, description, adminId, st) {
+    if (!name || !name.trim()) return { ok: false, msg: "Please give the club a name." };
+    st.clubs = st.clubs || [];
+    const club = { id: uid(), name: name.trim(), description: (description || "").trim(), adminId, members: [adminId], bookId: "", created: Date.now() };
+    st.clubs.push(club);
+    save(st);
+    return { ok: true, club };
+  }
+
+  function updateClub(clubId, fields, st) {
+    const club = (st.clubs || []).find(c => c.id === clubId);
+    if (!club) return { ok: false, msg: "Club not found." };
+    if (fields.name) club.name = fields.name.trim();
+    if (typeof fields.description === "string") club.description = fields.description.trim();
+    if (fields.bookId !== undefined) club.bookId = fields.bookId;
+    save(st);
+    return { ok: true, club };
+  }
+
+  function deleteClub(clubId, st) {
+    st.clubs = (st.clubs || []).filter(c => c.id !== clubId);
+    st.clubPosts = (st.clubPosts || []).filter(p => p.clubId !== clubId);
+    save(st);
+  }
+
+  function joinClub(clubId, userId, st) {
+    const club = (st.clubs || []).find(c => c.id === clubId);
+    if (!club) return { ok: false, msg: "Club not found." };
+    if (club.members.includes(userId)) return { ok: false, msg: "You're already in this club." };
+    club.members.push(userId);
+    save(st);
+    return { ok: true, club };
+  }
+
+  function leaveClub(clubId, userId, st) {
+    const club = (st.clubs || []).find(c => c.id === clubId);
+    if (!club) return;
+    club.members = club.members.filter(m => m !== userId);
+    save(st);
+  }
+
+  function clubForUser(userId, st) {
+    return (st.clubs || []).filter(c => c.members.includes(userId));
+  }
+
+  function addClubPost(clubId, userId, text, st) {
+    if (!text || !text.trim()) return { ok: false, msg: "Write something first." };
+    st.clubPosts = st.clubPosts || [];
+    st.clubPosts.push({ id: uid(), clubId, userId, text: text.trim(), date: Date.now() });
+    save(st);
+    return { ok: true };
+  }
+
+  function clubPosts(clubId, st) {
+    return (st.clubPosts || []).filter(p => p.clubId === clubId).sort((a, b) => b.date - a.date);
+  }
+
  /* ------------------------------ Public API ---------------------------- */
  return {
  getState, save, seedIfEmpty, resetAll, uid,
@@ -754,6 +851,9 @@ const Store = (function () {
     CLASSES, studentsByClass,
     kioskLogin, changePassword, updateProfile,
     demoUsernames, removeDemoAccounts,
+    logReading, readingForUser, readingSummary,
+    createClub, updateClub, deleteClub, joinClub, leaveClub, clubForUser,
+    addClubPost, clubPosts,
   };
 })();
 

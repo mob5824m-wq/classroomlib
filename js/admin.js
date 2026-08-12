@@ -29,6 +29,8 @@
     renderCharges();
     renderReminders();
     renderReports();
+    renderClubsAdmin();
+    renderReadingAdmin();
     renderKiosk();
     renderHomeSettings();
     renderPolicy();
@@ -138,6 +140,54 @@
     a.href = URL.createObjectURL(blob);
     a.download = name;
     document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  /* ------------------------------ clubs ------------------------------- */
+  function renderClubsAdmin() {
+    const box = $("#clubs-admin");
+    if (!box) return;
+    const st = S.getState();
+    const clubs = (st.clubs || []).slice().sort((a, b) => b.created - a.created);
+    box.innerHTML = clubs.length
+      ? `<div class="table-wrap"><table>
+          <thead><tr><th>Club</th><th>Description</th><th>Book</th><th>Members</th><th>Posts</th><th>Actions</th></tr></thead>
+          <tbody>${clubs.map(c => {
+            const book = c.bookId ? st.books.find(b => b.id === c.bookId) : null;
+            return `<tr>
+              <td><strong>${esc(c.name)}</strong></td>
+              <td class="muted small">${esc(c.description || "—")}</td>
+              <td>${book ? esc(book.title) : "—"}</td>
+              <td>${c.members.length}</td>
+              <td>${(st.clubPosts || []).filter(p => p.clubId === c.id).length}</td>
+              <td><button class="btn btn-danger-ghost btn-sm" data-del-club="${c.id}">Delete</button></td>
+            </tr>`;
+          }).join("")}</tbody></table></div>`
+      : `<p class="muted">No clubs yet.</p>`;
+    box.querySelectorAll("[data-del-club]").forEach(b => b.addEventListener("click", () => {
+      if (confirm("Delete this club and its discussion?")) { S.deleteClub(b.dataset.delClub, S.getState()); renderClubsAdmin(); }
+    }));
+  }
+
+  /* --------------------------- reading admin -------------------------- */
+  function renderReadingAdmin() {
+    const box = $("#reading-admin");
+    if (!box) return;
+    const st = S.getState();
+    const rows = st.users.filter(u => u.role === "student").map(u => {
+      const s = S.readingSummary(u.id, st);
+      return { name: u.name, class: u.class || "", minutes: s.totalMinutes, pages: s.totalPages, entries: s.entries, streak: s.streak };
+    }).sort((a, b) => b.minutes - a.minutes);
+    box.innerHTML = `<div class="table-wrap"><table>
+      <thead><tr><th>Student</th><th>Class</th><th>Minutes</th><th>Pages</th><th>Entries</th><th>Streak</th></tr></thead>
+      <tbody>${rows.map(r => `<tr><td>${esc(r.name)}</td><td>${esc(r.class)}</td><td>${r.minutes}</td><td>${r.pages}</td><td>${r.entries}</td><td>${r.streak}</td></tr>`).join("")}</tbody>
+    </table></div>`;
+    const csvBtn = $("#reading-csv");
+    if (csvBtn) csvBtn.addEventListener("click", () => {
+      const esc2 = v => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`;
+      const csv = [["Student","Class","Minutes","Pages","Entries","Streak"], ...rows.map(r => [r.name, r.class, r.minutes, r.pages, r.entries, r.streak].map(esc2))].map(r => r.join(",")).join("\r\n");
+      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "reading-log.csv"; document.body.appendChild(a); a.click(); a.remove();
+    });
   }
 
   /* ------------------------------ kiosk (#3) --------------------------- */
