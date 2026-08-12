@@ -2,6 +2,8 @@
 
 A friendly, fully-functional **Classroom Library website** for Grade 7–8 students, built with **HTML, CSS, and vanilla JavaScript** (no frameworks, no build step). It runs on a small Node server that keeps one **shared** library (books, loans, holds, reviews, requests, charges) so every device sees the same data.
 
+> The room number, site map, and all pages are configurable — see **Admin → Home Page settings** to change the room number (shown in the top bar and footer).
+
 ---
 
 ## Setup (three ways)
@@ -25,7 +27,9 @@ Open **http://localhost:8080** and sign in with a demo account:
 
 > **Data is stored in a shared `library-data.json` file** the server keeps, so it
 > survives restarts and is the same on every device that connects to the server.
-> Passwords are hashed and sessions use secure httpOnly cookies.
+> Admin passwords are hashed; student/kiosk passwords are encrypted at rest and
+> revealed to the teacher on request. Sessions use secure httpOnly cookies and
+> auto-sign-out after 6 hours of inactivity (except the kiosk).
 
 ### B. Host it at home so it's usable at school (DuckDNS)
 
@@ -60,22 +64,27 @@ Our Classroom Library
 ├── Home (index.html) — welcome, stats, featured picks, announcements
 ├── Catalog (catalog.html) — browse, search, filter, check out, place holds
 ├── How to Check Out (how-to-check-out.html) — 3-step guide + FAQ + loan rules
-├── My Library (my-library.html) — student's checked-out books, due dates, holds, returns
+├── My Library (my-library.html) — student's checked-out books, due dates, holds, returns, reading log, clubs, account
 ├── Checkout Kiosk (kiosk.html) — no-login checkout / check-in for the classroom
-└── Admin (admin.html) — librarian console: manage books, students, loans, policy, pricing
+├── Admin (admin.html) — librarian console: manage books, students, groups, loans, policy, pricing
+└── Site Map (sitemap.html) — a map of every page, linked from the nav
 ```
+
+A **Site Map** link appears in the top nav of every page.
 
 ### Checkout Kiosk (no account needed)
 
-**Check Out** tab: pick your class (7A / 7B / 8A / 8B) → tap your name → scan or type
-the book's barcode. Done — no sign-in required.
+The kiosk offers exactly two options:
+- **Check Out** — scan (or type) the book's barcode to check it out.
+- **Check In** — scan (or type) the book's barcode to return it.
 
-**Check In** tab: scan or type the book's barcode to return it (works even if no
-one is signed in).
+It runs under a dedicated **kiosk** account (its own role, no class) so it
+never shows up in a class roster and never times out. The teacher can enable or
+disable the kiosk and review its activity log in **Admin → Kiosk**.
 
-Each student has a **Class** (7A/7B/8A/8B) so the kiosk roster only shows their
-classmates. The admin sets a student's class in **Admin → Students** (via the
-Class dropdown in **Add/Edit**, or `Name | Class` in **Bulk add**).
+Each student has a **Class** (7A/7B/8A/8B). The admin sets a student's class in
+**Admin → Students** (Class dropdown in **Add/Edit**, or `Name | Class` in
+**Bulk add**). Admin accounts don't get a class.
 
 Every page shares a sticky top nav and is fully **responsive** (desktop → tablet → phone).
 
@@ -105,7 +114,7 @@ The home page also shows live stats (books on our shelves, available now, hot pi
 
 1. ** Sign in** — Tap *Sign in* up in the corner and use the class username and password your librarian gave you. It only takes a second!
 2. ** Pick a book** — Head to the *Catalog* and search for something you like. If it shows "available", tap **Check out** — it's yours!
-3. **⏰ Read & return** — Enjoy your book, and bring it back **before its due date**. You'll see your due date in *My Library*.
+3. **Read & return** — Enjoy your book, and bring it back **before its due date**. You'll see your due date in *My Library*.
 
 The full guide page adds a loan-length table, "hot books = shorter loans" explanation, and an FAQ.
 
@@ -189,6 +198,36 @@ library.
 with three toggles that persist across visits: **Dark mode**, **Larger text**,
 and a **Dyslexia-friendly font**.
 
+**Reading log / tracker.** In **My Library**, students log **minutes** and
+**pages** read (either is optional) and can attach a book. The section shows
+total minutes, pages, entry count, a **day streak**, and recent history. The
+teacher sees per-student reading totals (and a CSV export) in **Admin → Clubs**.
+
+**Book clubs / reading groups.** In **My Library**, students can create, join,
+and leave clubs and post to a discussion thread. The teacher creates **reading
+groups** in **Admin → Reading groups**, assigning a **book**, the **pages to
+read**, a **due date**, and the students in the group. Students see
+**"Your book to get: [title]"** plus the pages and due date right on their card.
+
+**Changeable room number.** In **Admin → Home Page settings** the teacher can
+set the **room number** (e.g. 204); the top bar and footer update to
+"Room <n> Library" on every page.
+
+**Passwords & security.**
+- Everyone can change their own password — students in **My Library**,
+  teachers in **Admin → My Account**.
+- **Admin passwords are hashed** (one-way, never recoverable).
+- **Student & kiosk passwords are encrypted** at rest with a server secret key
+  (`library-secret.key`, gitignored). They are **not** included in the shared
+  data; the teacher reveals one on demand via a **View** button in
+  **Admin → Students** (admin-only, server-side decryption).
+- **Auto sign-out after 6 hours of inactivity** for every account **except the
+  kiosk** (so the checkout station keeps working). Any interaction resets the
+  6-hour timer.
+
+**Kiosk is its own role.** The kiosk account has role `kiosk`, no class, is
+excluded from class rosters, and never auto-signs-out.
+
 ---
 
 ## Admin console quick tour
@@ -202,10 +241,15 @@ and a **Dyslexia-friendly font**.
 - **Requests** — approve/decline student book requests.
 - **Charges** — track lost/damaged book replacement charges and mark them paid.
 - **Reminders** — overdue books grouped by student, with suggested messages.
+- **Reports** — active loans, overdue, most popular, loans by class, per-student summary — each downloadable as CSV.
+- **Reading groups** — create/edit groups, assign a book, pages, due date, and members; plus reading totals by student with CSV.
+- **Kiosk** — enable/disable the checkout kiosk and review its activity log.
+- **Home Page** — book of the week, room number, hide demo accounts.
 - **Announcements** — add / edit / delete the notices shown on the home page.
 - **Loan Policy** — tune base loan days per type, max books/student, max holds, overdue grace.
 - **Pricing** — tune condition multipliers (drives replacement price).
 - **Display** — dark mode / larger text toggles for the admin's own browser.
+- **My Account** — change the admin's display name or password.
 - **Danger zone** — reset all demo data to the starting point.
 
 ### How to manage students (add / edit / view)
@@ -215,16 +259,22 @@ Everything lives in the **Students** tab of the Admin Dashboard (the tab labeled
 
 1. **Sign in as admin** — `admin` / `admin123` — and open **Admin** from the top bar.
 2. **View** — the Students tab lists every account in a table: name, username,
-   grade, role, and how many books each student currently has checked out.
+   grade, **class**, role, password (students), and how many books each student
+   currently has checked out.
 3. **Add one student** — click **+ Add student**. Type the full name and the
    username auto-fills (first name + last initial); a password is generated for
-   you (you can change it). Pick the grade, then **Add student**.
+   you (you can change it). Pick the **grade** and **class** (7A/7B/8A/8B), then
+   **Add student**. The Class field is only shown for students — **admin**
+   accounts don't get a class.
 4. **Add many at once** — click **Bulk add**. Paste one name per line
-   (optionally `Name | Grade`), set a default password, and it creates every
-   account instantly, showing a printable table of usernames & passwords.
-5. **Edit** — click **Edit** on a student's row to change their name, grade, role,
-   or password (leave the password blank to keep the current one).
-6. **Delete** — click **Delete** on a student's row (this also removes their loans
+   (optionally `Name | Class`, e.g. `Ava Jones | 8B`), set a default password,
+   and it creates every account instantly, showing a printable table of
+   usernames & passwords.
+5. **Edit** — click **Edit** on a student's row to change their name, grade, class,
+   role, or password (leave the password blank to keep the current one).
+6. **View a password** — student/kiosk passwords are encrypted; click the
+   **View** button to have the server reveal one (admin-only, on request).
+7. **Delete** — click **Delete** on a student's row (this also removes their loans
    and holds).
 
 Students log in with their username/password on any page via **Sign in**.
@@ -238,20 +288,28 @@ classroomlib/
 ├── index.html Home
 ├── catalog.html Catalog (search, filters, checkout, holds, barcodes)
 ├── how-to-check-out.html 3-step guide + FAQ
-├── my-library.html Student dashboard
+├── my-library.html Student dashboard (books, holds, reading log, clubs, account)
+├── kiosk.html No-login checkout / check-in
 ├── admin.html Admin console
+├── sitemap.html Site map
 ├── css/style.css All styles (responsive)
 ├── js/
-│ ├── store.js Data layer + all business rules (loans, holds, popularity, pricing, reviews)
+│ ├── store.js Data layer + all business rules (loans, holds, popularity, pricing, reviews, reading, clubs, auth)
 │ ├── barcode.js EAN-13 barcode generator (canvas) + PNG download
-│ ├── covers.js Auto-pulls book covers & descriptions from Open Library
+│ ├── covers.js Auto-pulls book covers, descriptions, and prices from Open Library / Google Books
 │ ├── scanner.js Barcode scanner (camera + typed / physical-scanner input)
 │ ├── scan.js Scan workflow: check out / return / hold + admin loan & hold details
-│ ├── app.js Shared nav, login modal, toasts, availability badges
+│ ├── request.js Book request form (student → admin)
+│ ├── a11y.js Dark mode / larger text / dyslexia-friendly font
+│ ├── app.js Shared nav, login modal, toasts, availability badges, room number
 │ ├── catalog.js Catalog page logic
 │ ├── mylibrary.js Student dashboard logic
+│ ├── kiosk.js Kiosk logic
 │ ├── admin.js Admin console logic
 │ └── home.js Home page logic
+├── server.js Node backend (shared data, auth, sessions, encryption)
+├── Caddyfile.example Free HTTPS (DuckDNS) config
+├── manifest.webmanifest + sw.js PWA (add to home screen, offline)
 ├── HOSTING.md Home hosting + dynamic DNS + HTTPS guide
 └── README.md You are here
 ```
@@ -261,12 +319,17 @@ classroomlib/
 ## Going beyond the built-in backend
 
 The app already ships with a **Node backend** (`server.js`) that keeps a shared
-JSON data file, hashes passwords, and uses httpOnly session cookies — enough for
-a classroom. If you ever outgrow it (many simultaneous writers, or need to run
-on a hosted platform), `js/store.js` is the single seam: re-implement its public
-API (`getState`, `save`, `createLoan`, `returnLoan`, `createHold`, `renewLoan`,
-`authenticate`, `currentUser`, …) to call a real database/API instead, and every
-page keeps working unchanged.
+JSON data file, hashes admin passwords, encrypts student/kiosk passwords with a
+server secret key, and uses httpOnly session cookies with a 6-hour inactivity
+sign-out — enough for a classroom. If you ever outgrow it (many simultaneous
+writers, or need to run on a hosted platform), `js/store.js` is the single seam:
+re-implement its public API (`getState`, `save`, `createLoan`, `returnLoan`,
+`createHold`, `renewLoan`, `authenticate`, `currentUser`, …) to call a real
+database/API instead, and every page keeps working unchanged.
+
+> **Backup note:** the encrypted passwords rely on the server secret key
+> (`library-secret.key`, gitignored). Back it up alongside `library-data.json` —
+> losing it would make student passwords undecryptable.
 
 ---
 
