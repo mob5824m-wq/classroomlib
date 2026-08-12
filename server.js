@@ -32,7 +32,8 @@ const PORT = process.env.PORT || process.env.CLASSROOM_PORT || 8080;
 const HOST = "0.0.0.0";
 const DATA_FILE = path.join(ROOT, "library-data.json");
 const COOKIE = "classroom_session";
-const SESSION_TTL = 1000 * 60 * 60 * 24 * 7; // 7 days
+const SESSION_TTL = 1000 * 60 * 60 * 6;        // auto sign-out after 6h of inactivity
+const SESSION_ABS_MAX = 1000 * 60 * 60 * 24 * 7; // hard cap (7 days)
 
 const MIME = {
   ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8",
@@ -200,13 +201,25 @@ function sessionUser(req) {
   const token = cookieFromReq(req);
   if (!token) return null;
   const s = sessions.get(token);
-  if (!s || s.expires < Date.now()) { sessions.delete(token); return null; }
-  return state.users.find(u => u.id === s.userId) || null;
+  if (!s) return null;
+  const user = state.users.find(u => u.id === s.userId);
+  // Absolute expiry.
+  if (s.expires < Date.now()) { sessions.delete(token); return null; }
+  // 6-hour inactivity timeout — but never for the kiosk account.
+  if (user && user.role !== "kiosk") {
+    const now = Date.now();
+    if (now - (s.lastActive || now) > SESSION_TTL) { sessions.delete(token); return null; }
+    s.lastActive = now; // sliding
+  }
+  return user || null;
 }
 function newSession(userId, res) {
   const token = crypto.randomBytes(24).toString("hex");
-  sessions.set(token, { userId, expires: Date.now() + SESSION_TTL });
-  res.setHeader("Set-Cookie", `${COOKIE}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_TTL / 1000}`);
+  const user = state.users.find(u => u.id === userId);
+  // Kiosk sessions don't time out; everyone else gets the inactivity cap.
+  const maxAge = (user && user.role === "kiosk") ? SESSION_ABS_MAX : SESSION_TTL;
+  sessions.set(token, { userId, lastActive: Date.now(), expires: Date.now() + SESSION_ABS_MAX });
+  res.setHeader("Set-Cookie", `${COOKIE}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${Math.floor(maxAge / 1000)}`);
 }
 function clearSession(req, res) {
   const token = cookieFromReq(req);

@@ -515,7 +515,8 @@ const Store = (function () {
   }
   function setSession(user) {
     // Store the (redacted) user object so pages work without another round-trip.
-    sessionStorage.setItem(SESS_KEY, JSON.stringify(user));
+    // lastActive drives the 6h inactivity sign-out (kiosk exempt).
+    sessionStorage.setItem(SESS_KEY, JSON.stringify(Object.assign({}, user, { lastActive: Date.now() })));
   }
   function clearSession() {
     sessionStorage.removeItem(SESS_KEY);
@@ -603,9 +604,19 @@ const Store = (function () {
   }
 
   function currentUser() {
-    if (_me) return _me;
+    if (_me) {
+      // Enforce inactivity on the cached user too (kiosk exempt).
+      if (_me.role !== "kiosk") {
+        const last = _me.lastActive || Date.now();
+        if (Date.now() - last > 1000 * 60 * 60 * 6) { clearSession(); return null; }
+        _me.lastActive = Date.now();
+      }
+      return _me;
+    }
     if (_mode === "server") {
       // Re-validate from the server's session cookie if we have a cached user.
+      // The server signs out non-kiosk users after 6h of inactivity, so a 401
+      // here means the session expired — clear it rather than fall back.
       const s = session();
       if (!s || !s.id) return null;
       try {
@@ -613,11 +624,27 @@ const Store = (function () {
         xhr.open("GET", "/api/me", false);
         xhr.send(null);
         if (xhr.status === 200) { _me = JSON.parse(xhr.responseText); return _me; }
-      } catch (e) {}
-      return s; // fall back to cached (offline)
+        if (xhr.status === 401 && s.role !== "kiosk") { clearSession(); return null; }
+      } catch (e) {
+        // Offline: allow a short grace, but if the cached session is stale,
+        // clear it. Kiosk is exempt (server keeps it alive).
+        if (s.role !== "kiosk") {
+          const last = s.lastActive || 0;
+          if (Date.now() - last > 1000 * 60 * 60 * 6) { clearSession(); return null; }
+        }
+        return s; // fall back to cached (brief offline)
+      }
+      return s;
     }
     const s = session();
     if (!s) return null;
+    // Local mode: enforce the same 6h inactivity timeout (except kiosk).
+    if (s.role !== "kiosk") {
+      const last = s.lastActive || Date.now();
+      if (Date.now() - last > 1000 * 60 * 60 * 6) { clearSession(); return null; }
+    }
+    s.lastActive = Date.now();
+    try { sessionStorage.setItem(SESS_KEY, JSON.stringify(s)); } catch (e) {}
     return getState().users.find(u => u.id === s.id) || null;
   }
 
