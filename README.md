@@ -2,7 +2,8 @@
 
 A friendly, fully-functional **Classroom Library website** for Grade 7–8 students, built with **HTML, CSS, and vanilla JavaScript** (no frameworks, no build step). It runs on a small Node server that keeps one **shared** library (books, loans, holds, reviews, requests, charges) so every device sees the same data.
 
-> The room number, site map, and all pages are configurable — see **Admin → Home Page settings** to change the room number (shown in the top bar and footer).
+> The **room number** is configurable — see **Admin → Home Page settings**. It
+> appears in the top bar and footer as "Room # Library" on every page.
 
 ---
 
@@ -95,14 +96,14 @@ Every page shares a sticky top nav and is fully **responsive** (desktop → tabl
 1. **Big, clear, one-tap actions.** Buttons say exactly what they do ("Check out", "Place hold", "Return") and never hide behind menu trails.
 2. **Friendly status everywhere.** Every book card instantly shows **"2 available"**, **"Checked out"**, or **"Reserved"** in a color-coded badge — no guesswork.
 3. **Explanatory micro-copy.** Little helpers like *"Borrow: 14 days"* and *" Hot pick"* teach students *why* a rule exists instead of confusing them.
-4. **Forgiving + encouraging tone.** Overdue notices are gentle reminders, and confirmations celebrate ("It's yours until Aug 24! ").
+4. **Forgiving + encouraging tone.** Overdue notices are gentle reminders, and confirmations celebrate ("It's yours until Aug 24!").
 5. **Students run it themselves.** Checking out, returning, renewing, and placing holds are all self-service — no librarian required for routine tasks.
 
 ---
 
 ## 3. Welcome / Home page copy
 
-> **Welcome to your Classroom Library! **
+> **Welcome to your Classroom Library!**
 >
 > Your adventure starts here. Browse our shelves, find a story you'll love, and check out books to take home. Every book is a doorway to somewhere new — what will you discover today?
 
@@ -112,8 +113,8 @@ The home page also shows live stats (books on our shelves, available now, hot pi
 
 ## 4. 3-step "How to Check Out" guide
 
-1. ** Sign in** — Tap *Sign in* up in the corner and use the class username and password your librarian gave you. It only takes a second!
-2. ** Pick a book** — Head to the *Catalog* and search for something you like. If it shows "available", tap **Check out** — it's yours!
+1. **Sign in** — Tap *Sign in* up in the corner and use the class username and password your librarian gave you. It only takes a second!
+2. **Pick a book** — Head to the *Catalog* and search for something you like. If it shows "available", tap **Check out** — it's yours!
 3. **Read & return** — Enjoy your book, and bring it back **before its due date**. You'll see your due date in *My Library*.
 
 The full guide page adds a loan-length table, "hot books = shorter loans" explanation, and an FAQ.
@@ -146,14 +147,14 @@ The full guide page adds a loan-length table, "hot books = shorter loans" explan
 
 ## New in this build
 
-**Scan barcodes to check out & check in.** Hit the ** Scan** button (floating bottom-right on the Catalog and Admin pages) to open the scanner. Three input paths work:
+**Scan barcodes to check out & check in.** Hit the **Scan** button in the top bar of the Catalog and Admin pages to open the scanner. Three input paths work:
 - **Camera** — uses the browser's Barcode Detection API (Chrome/Edge over `https`/`localhost`) to read the barcode live.
 - **Type it** — just type or paste the barcode number.
 - **Physical USB scanner** — plug one in, click the input box, and scan; it types the digits + Enter for you.
 
 After a scan you can check out (to yourself as a student, or to *any* student as admin), return a copy, or place a hold. Scanning works with 13-digit EAN-13 barcodes, and it also accepts ISBN-10 and hyphenated forms.
 
-**Admin: pull up loan & hold details by scanning.** Scan any book as the admin and you'll see a full breakdown — active loans (who has it, when due, one-click return), the hold queue (position + remove), and the book's replacement value. The same panel is also reachable from the Books table via the button (in case you don't have a scanner handy).
+**Admin: pull up loan & hold details by scanning.** Scan any book as the admin and you'll see a full breakdown — active loans (who has it, when due, one-click return), the hold queue (position + remove), and the book's replacement value. The same panel is also reachable from the Books table via the "loans &amp; holds" button (in case you don't have a scanner handy).
 
 **Dynamic reviews, ratings & descriptions.** Students can rate books 1–5 stars and leave a review (one per student, editable) from the Catalog detail view. Every card and detail view shows live star ratings, and ratings feed into the popularity score. Real book descriptions are **pulled automatically from Open Library** in the background (once per session) — no manual work needed. Admins can also re-fetch or manually edit a description per book, or "auto-fill all" at once.
 
@@ -161,7 +162,7 @@ After a scan you can check out (to yourself as a student, or to *any* student as
 
 **Easy student account creation.** In Admin → **Students** you can:
 - **+ Add student** — type a name and the username is auto-suggested (first name + last initial) with a generated password.
-- ** Bulk add** — paste a list of names (one per line, optionally `Name | Grade`) and it creates every account instantly, showing a printable table of usernames & passwords to hand out.
+- **Bulk add** — paste a list of names (one per line, optionally `Name | Class`) and it creates every account instantly, showing a printable table of usernames & passwords to hand out.
 
 
 **Shared backend — all devices see the same data.** The site now runs on a real
@@ -333,4 +334,4 @@ database/API instead, and every page keeps working unchanged.
 
 ---
 
-*Built for our Grade 7–8 readers. Read on, dream big! *
+*Built for our Grade 7–8 readers. Read on, dream big!*
