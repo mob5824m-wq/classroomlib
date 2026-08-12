@@ -157,13 +157,14 @@ function verifyPassword(pw, user) {
 }
 
 // Redact a user for the client.
-//  - Students/kiosk: include the decrypted password so the admin can view it.
-//  - Admin:          hide the password entirely (hashed `pw`), expose hasPassword.
+//  - Students/kiosk: password is NOT sent in state; only hasPassword flag.
+//    It is decrypted on request via POST /api/password (admin only).
+//  - Admin:          password hidden entirely (hashed `pw`).
 function redact(u) {
   const out = Object.assign({}, u);
   if (VIEWABLE_ROLES.includes(u.role)) {
     delete out.pw;
-    out.password = u.password ? decryptPassword(u.password) : "";
+    delete out.password;
     out.hasPassword = !!u.password;
   } else {
     out.hasPassword = !!u.pw;
@@ -295,6 +296,18 @@ const server = http.createServer((req, res) => {
   if (urlPath === "/api/me") {
     const u = sessionUser(req);
     return u ? json(res, 200, redact(u)) : json(res, 401, { ok: false });
+  }
+  // Admin-only: reveal a student/kiosk password on request (decrypt it).
+  if (urlPath === "/api/password" && method === "POST") {
+    const admin = sessionUser(req);
+    if (!admin || admin.role !== "admin") return json(res, 403, { ok: false, error: "Admin only." });
+    return readBody(req, body => {
+      let b; try { b = JSON.parse(body); } catch (e) { return json(res, 400, { ok: false }); }
+      const u = state.users.find(x => x.id === b.userId);
+      if (!u) return json(res, 404, { ok: false, error: "User not found." });
+      if (!VIEWABLE_ROLES.includes(u.role)) return json(res, 403, { ok: false, error: "Not a viewable account." });
+      return json(res, 200, { ok: true, username: u.username, password: decryptPassword(u.password) });
+    });
   }
   if (urlPath === "/api/kiosk-login" && method === "POST") {
     const k = state.users.find(u => u.username === "kiosk");

@@ -792,7 +792,7 @@
  return `<tr>
  <td><strong>${esc(u.name)}</strong></td>
  <td>${esc(u.username)}</td>
- <td>${u.role === "admin" ? `<span class="muted">—</span>` : `<code>${esc(u.password || "")}</code>`}</td>
+ <td>${u.role === "admin" ? `<span class="muted">—</span>` : `<span class="muted small">encrypted</span> <button class="btn btn-soft btn-sm" data-view-pw="${u.id}" title="Reveal password">View</button>`}</td>
  <td>${esc(u.grade || "—")}</td>
  <td>${esc(u.class || "—")}</td>
  <td>${roleBadge}</td>
@@ -806,10 +806,32 @@
  </tr>`;
  }).join("") || `<tr><td colspan="8" class="muted">No accounts yet.</td></tr>`;
 
+    // Reveal a student/kiosk password on request (server decrypts it).
+    box.querySelectorAll("[data-view-pw]").forEach(btn => btn.addEventListener("click", () => revealPassword(btn.dataset.viewPw, btn)));
+
  $$("[data-edit-user]").forEach(x => x.addEventListener("click", () => userForm(x.dataset.editUser)));
  $$("[data-del-user]").forEach(x => x.addEventListener("click", () => deleteUser(x.dataset.delUser)));
  $$("[data-add-user]").forEach(x => x.addEventListener("click", () => userForm(null)));
  $$("[data-bulk-users]").forEach(x => x.addEventListener("click", () => bulkForm()));
+ }
+
+ // Fetch and reveal a student/kiosk password on request (admin only).
+ function revealPassword(userId, btn) {
+   if (!confirm("Reveal this student's password? It will be shown in the table.")) return;
+   const prev = btn.textContent;
+   btn.textContent = "…";
+   btn.disabled = true;
+   fetch("/api/password", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId }) })
+     .then(r => r.json())
+     .then(res => {
+       if (res.ok) {
+         btn.closest("td").innerHTML = `<code>${esc(res.password)}</code>`;
+       } else {
+         btn.textContent = prev; btn.disabled = false;
+         toast(res.error || "Couldn't reveal password.", "error");
+       }
+     })
+     .catch(() => { btn.textContent = prev; btn.disabled = false; toast("Couldn't reach the server.", "error"); });
  }
 
  function userForm(id) {
