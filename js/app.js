@@ -301,10 +301,26 @@
  window.applyRoom = applyRoom;
 
  /* ------------------------------- init ----------------------------- */
+ // Periodically check for the 6h inactivity timeout so a page left open idle
+ // signs the user out on its own (kiosk is exempt). Uses a non-touching check
+ // so the poll itself does NOT reset the inactivity clock.
+ function startInactivityCheck() {
+   setInterval(() => {
+     // Use raw session (non-touching) so the poll doesn't reset the clock.
+     if (S.session() && S.sessionExpired()) {
+       S.clearSession();
+       toast("Signed out after inactivity.", "info");
+       renderUserNav();
+       if (typeof window.onAuthChange === "function") window.onAuthChange(null);
+     }
+   }, 30000); // every 30s
+ }
+
  document.addEventListener("DOMContentLoaded", () => {
  S.seedIfEmpty();
  renderUserNav();
  applyRoom();
+ startInactivityCheck();
  // #12: PWA — register service worker for offline + installability.
  if ("serviceWorker" in navigator) {
    try { navigator.serviceWorker.register("sw.js").catch(() => {}); } catch (e) {}

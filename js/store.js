@@ -603,14 +603,32 @@ const Store = (function () {
     return { ok: true, user: target };
   }
 
+  // Non-touching check: true if the stored (non-kiosk) session has been idle
+  // longer than the 6h window. Does NOT reset lastActive, so the periodic
+  // poll can detect real inactivity without keeping the session alive.
+  function sessionExpired() {
+    const s = session();
+    if (!s || s.role === "kiosk") return false;
+    const last = s.lastActive || Date.now();
+    return (Date.now() - last) > 1000 * 60 * 60 * 6;
+  }
+
+  // Update the stored session's lastActive so the 6h inactivity timer survives
+  // page reloads. Returns true if the session is still valid (kiosk is exempt).
+  function touchSession(sess) {
+    if (!sess) return false;
+    if (sess.role !== "kiosk") {
+      const last = sess.lastActive || Date.now();
+      if (Date.now() - last > 1000 * 60 * 60 * 6) return false;
+      sess.lastActive = Date.now();
+    }
+    try { sessionStorage.setItem(SESS_KEY, JSON.stringify(sess)); } catch (e) {}
+    return true;
+  }
+
   function currentUser() {
     if (_me) {
-      // Enforce inactivity on the cached user too (kiosk exempt).
-      if (_me.role !== "kiosk") {
-        const last = _me.lastActive || Date.now();
-        if (Date.now() - last > 1000 * 60 * 60 * 6) { clearSession(); return null; }
-        _me.lastActive = Date.now();
-      }
+      if (!touchSession(_me)) { clearSession(); return null; }
       return _me;
     }
     if (_mode === "server") {
@@ -623,28 +641,20 @@ const Store = (function () {
         const xhr = new XMLHttpRequest();
         xhr.open("GET", "/api/me", false);
         xhr.send(null);
-        if (xhr.status === 200) { _me = JSON.parse(xhr.responseText); return _me; }
+        if (xhr.status === 200) { _me = JSON.parse(xhr.responseText); touchSession(_me); return _me; }
         if (xhr.status === 401 && s.role !== "kiosk") { clearSession(); return null; }
       } catch (e) {
         // Offline: allow a short grace, but if the cached session is stale,
         // clear it. Kiosk is exempt (server keeps it alive).
-        if (s.role !== "kiosk") {
-          const last = s.lastActive || 0;
-          if (Date.now() - last > 1000 * 60 * 60 * 6) { clearSession(); return null; }
-        }
+        if (!touchSession(s)) { clearSession(); return null; }
         return s; // fall back to cached (brief offline)
       }
+      touchSession(s);
       return s;
     }
     const s = session();
     if (!s) return null;
-    // Local mode: enforce the same 6h inactivity timeout (except kiosk).
-    if (s.role !== "kiosk") {
-      const last = s.lastActive || Date.now();
-      if (Date.now() - last > 1000 * 60 * 60 * 6) { clearSession(); return null; }
-    }
-    s.lastActive = Date.now();
-    try { sessionStorage.setItem(SESS_KEY, JSON.stringify(s)); } catch (e) {}
+    if (!touchSession(s)) { clearSession(); return null; }
     return getState().users.find(u => u.id === s.id) || null;
   }
 
@@ -879,7 +889,7 @@ const Store = (function () {
     addCharge, markChargePaid, chargesForUser,
     getAnnouncements, addAnnouncement, updateAnnouncement, deleteAnnouncement,
     CLASSES, studentsByClass,
-    kioskLogin, changePassword, updateProfile,
+    kioskLogin, changePassword, updateProfile, sessionExpired,
     demoUsernames, removeDemoAccounts,
     logReading, readingForUser, readingSummary,
     createClub, updateClub, deleteClub, joinClub, leaveClub, clubForUser,
