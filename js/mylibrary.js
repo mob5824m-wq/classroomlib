@@ -46,6 +46,27 @@
    };
  }
 
+ // Change password (students can change their own; teacher can view it).
+ const pwForm = $("#mypw-form");
+ const pwMsg = $("#mypw-msg");
+ if (pwForm) {
+   pwForm.onsubmit = (e) => {
+     e.preventDefault();
+     const nw = $("#mypw-new").value;
+     const nw2 = $("#mypw-new2").value;
+     if (!nw || nw.length < 4) { pwMsg.textContent = "Password must be at least 4 characters."; return; }
+     if (nw !== nw2) { pwMsg.textContent = "Passwords don't match."; return; }
+     const res = S.changePassword(nw);
+     if (res.ok) {
+       $("#mypw-new").value = ""; $("#mypw-new2").value = "";
+       pwMsg.textContent = "Password changed.";
+       toast("Password changed.");
+     } else {
+       pwMsg.textContent = res.msg;
+     }
+   };
+ }
+
  // Stats
  $("#m-count").textContent = loans.length;
  const soonest = loans.map(l => l.dueDate).sort((a, b) => a - b)[0];

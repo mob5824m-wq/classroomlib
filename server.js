@@ -70,7 +70,13 @@ function loadData() {
 function migrate() {
   let changed = false;
   (state.users || []).forEach(u => {
-    if (u.password) { u.pw = hashPassword(u.password); delete u.password; changed = true; }
+    // Students keep a plaintext password (so the teacher can view it);
+    // admin passwords are hashed. Migrate old admin hashes-as-password here.
+    if (u.role === "student") {
+      if (u.pw && !u.password) { /* student had a hash — not viewable; leave as-is */ }
+    } else if (u.password && !u.pw) {
+      u.pw = hashPassword(u.password); delete u.password; changed = true;
+    }
     if (u.pw === undefined && u.password === undefined && u.passwordChangeRequired === undefined) u.passwordChangeRequired = false;
   });
   state.settings = Object.assign(defaultState().settings, state.settings || {});
@@ -91,34 +97,53 @@ function hashPassword(pw) {
   return { salt, hash };
 }
 function verifyPassword(pw, user) {
-  if (!user || !user.pw) return false;
-  const { salt, hash } = user.pw;
-  try {
-    const test = crypto.scryptSync(String(pw), salt, 64).toString("hex");
-    const a = Buffer.from(hash, "hex"), b = Buffer.from(test, "hex");
-    return a.length === b.length && crypto.timingSafeEqual(a, b);
-  } catch (e) { return false; }
+  if (!user) return false;
+  // Students store a plaintext password so the teacher (admin) can view it.
+  if (user.role === "student" && user.password !== undefined) {
+    return String(user.password) === String(pw);
+  }
+  // Admin (and any other non-student) passwords are hashed.
+  if (user.pw) {
+    const { salt, hash } = user.pw;
+    try {
+      const test = crypto.scryptSync(String(pw), salt, 64).toString("hex");
+      const a = Buffer.from(hash, "hex"), b = Buffer.from(test, "hex");
+      return a.length === b.length && crypto.timingSafeEqual(a, b);
+    } catch (e) { return false; }
+  }
+  return false;
 }
-// Hash any plaintext passwords that arrive from a client (first seed / local
-// data import). Returns a deep-ish copy of users with `password` removed.
-function ensureHashed(users) {
-  return users.map(u => {
-    const out = Object.assign({}, u);
-    if (u.password) { out.pw = hashPassword(u.password); delete out.password; }
-    if (u.pw === undefined) out.pw = u.pw; // preserve existing hash
-    return out;
-  });
-}
+
 // Redact a user for the client.
+//  - Student: keep the plaintext `password` so the admin can view it.
+//  - Admin:   hide the password entirely (hashed `pw`), expose hasPassword.
 function redact(u) {
   const out = Object.assign({}, u);
-  out.hasPassword = !!u.pw;
-  delete out.pw;
-  delete out.password;
+  if (u.role === "student") {
+    delete out.pw;
+    out.hasPassword = !!out.password;
+  } else {
+    out.hasPassword = !!u.pw;
+    delete out.pw;
+    delete out.password;
+  }
   return out;
 }
 function redactState() {
   return Object.assign({}, state, { users: state.users.map(redact) });
+}
+
+// Store a new password for a user, role-aware:
+//  - student -> plaintext `password` (teacher can see it)
+//  - admin   -> hashed `pw` (never exposed)
+function storePassword(u, plaintext) {
+  if (u.role === "student") {
+    u.password = String(plaintext);
+    delete u.pw;
+  } else {
+    u.pw = hashPassword(plaintext);
+    delete u.password;
+  }
 }
 
 /* ------------------------------ sessions ------------------------------- */
@@ -160,16 +185,20 @@ function readBody(req, cb) {
 /* --------------------------- merge on save ----------------------------- */
 function mergeState(incoming) {
   const merged = Object.assign(defaultState(), state || {}, incoming);
-  // Preserve existing password hashes: a client never has passwords, so don't
-  // let an incoming user without a hash wipe the stored one.
   merged.users = (merged.users || []).map(u => {
     const prev = (state && state.users || []).find(x => x.id === u.id);
-    if (u.pw === undefined && u.password === undefined && prev && prev.pw) u.pw = prev.pw;
-    if (u.password) { u.pw = hashPassword(u.password); delete u.password; }
+    const isStudent = u.role === "student";
+    if (isStudent) {
+      // Keep plaintext password; preserve the stored one if none provided.
+      if (!u.password && prev && prev.password) u.password = prev.password;
+      if (u.pw) delete u.pw; // don't store hashes for students
+    } else {
+      // Admin: keep the existing hash unless a plaintext password is provided.
+      if (!u.pw && !u.password && prev && prev.pw) u.pw = prev.pw;
+      if (u.password) { u.pw = hashPassword(u.password); delete u.password; }
+    }
     return u;
   });
-  // always ensure password field removed from any stored user
-  merged.users = merged.users.map(u => { if (u.password) { u.pw = hashPassword(u.password); delete u.password; } return u; });
   return merged;
 }
 function isSeeded() {
@@ -238,7 +267,7 @@ const server = http.createServer((req, res) => {
         (u.username || "").toLowerCase() === String(b.username || "").toLowerCase());
       if (!target) return json(res, 401, { ok: false, error: "Not signed in." });
       if (!b.newPassword || String(b.newPassword).length < 4) return json(res, 400, { ok: false, error: "New password must be at least 4 characters." });
-      target.pw = hashPassword(b.newPassword);
+      storePassword(target, b.newPassword);
       target.passwordChangeRequired = false;
       if (!sessUser) newSession(target.id, res); // ensure they're signed in after a successful change
       persist();

@@ -55,6 +55,24 @@
         $("#account-msg").textContent = res.msg;
       }
     };
+    // Admin can change their own password.
+    const pwForm = $("#admin-pw-form");
+    const pwMsg = $("#admin-pw-msg");
+    if (pwForm) {
+      pwForm.onsubmit = (e) => {
+        e.preventDefault();
+        const nw = $("#admin-pw-new").value;
+        const nw2 = $("#admin-pw-new2").value;
+        if (!nw || nw.length < 4) { pwMsg.textContent = "Password must be at least 4 characters."; return; }
+        if (nw !== nw2) { pwMsg.textContent = "Passwords don't match."; return; }
+        const res = S.changePassword(nw);
+        if (res.ok) {
+          $("#admin-pw-new").value = ""; $("#admin-pw-new2").value = "";
+          pwMsg.textContent = "Password changed.";
+          toast("Password changed.");
+        } else pwMsg.textContent = res.msg;
+      };
+    }
   }
 
   /* ----------------------------- reports (#4) -------------------------- */
@@ -770,6 +788,7 @@
  return `<tr>
  <td><strong>${esc(u.name)}</strong></td>
  <td>${esc(u.username)}</td>
+ <td>${u.role === "admin" ? `<span class="muted">—</span>` : `<code>${esc(u.password || "")}</code>`}</td>
  <td>${esc(u.grade || "—")}</td>
  <td>${esc(u.class || "—")}</td>
  <td>${roleBadge}</td>
@@ -781,7 +800,7 @@
  </div>
  </td>
  </tr>`;
- }).join("") || `<tr><td colspan="7" class="muted">No accounts yet.</td></tr>`;
+ }).join("") || `<tr><td colspan="8" class="muted">No accounts yet.</td></tr>`;
 
  $$("[data-edit-user]").forEach(x => x.addEventListener("click", () => userForm(x.dataset.editUser)));
  $$("[data-del-user]").forEach(x => x.addEventListener("click", () => deleteUser(x.dataset.delUser)));
@@ -806,7 +825,7 @@
  </label>
  <div class="filters" style="align-items:flex-end">
  <div class="field" style="flex:1"><label>Grade</label><input name="grade" value="${esc(u ? u.grade: "")}" placeholder="7th Grade"></div>
- <div class="field"><label>Class</label>
+ <div class="field" id="class-field"><label>Class</label>
  <select name="class">${S.CLASSES.map(c => `<option value="${c}" ${u && u.class === c ? "selected": ""}>${c}</option>`).join("")}</select>
  </div>
  <div class="field"><label>Role</label>
@@ -838,6 +857,17 @@
  if (genBtn) genBtn.addEventListener("click", () => {
  body.querySelector('[name="password"]').value = genPassword();
  });
+ // Admin accounts don't get a class — show the Class field only for students.
+ const classField = body.querySelector("#class-field");
+ const roleSel = body.querySelector('[name="role"]');
+ function syncClassField() {
+   if (!classField) return;
+   const isAdmin = roleSel && roleSel.value === "admin";
+   classField.style.display = isAdmin ? "none" : "";
+   if (isAdmin && body.querySelector('[name="class"]')) body.querySelector('[name="class"]').value = "";
+ }
+ if (roleSel) roleSel.addEventListener("change", syncClassField);
+ syncClassField();
  openModal($("#user-modal"));
  body.querySelector("[data-x]").addEventListener("click", () => closeModal($("#user-modal")));
  $("#user-form").addEventListener("submit", e => {
@@ -848,11 +878,13 @@
  if (st.users.find(x => x.username.toLowerCase() === data.username.trim().toLowerCase())) {
  toast("That username is already taken.", "error"); return;
  }
+ const cls = data.role === "admin" ? "Staff" : (data.class || "7A");
  st.users.push({ id: S.uid(), name: data.name.trim(), username: data.username.trim(),
- password: data.password, role: data.role, grade: data.grade.trim(), class: data.class });
+ password: data.password, role: data.role, grade: data.grade.trim(), class: cls });
  toast("Student added ", "success");
  } else {
- u.name = data.name.trim(); u.grade = data.grade.trim(); u.role = data.role; u.class = data.class;
+ u.name = data.name.trim(); u.grade = data.grade.trim(); u.role = data.role;
+ u.class = data.role === "admin" ? "Staff" : (data.class || u.class || "7A");
  if (data.password) u.password = data.password;
  toast("Account updated ", "success");
  }
