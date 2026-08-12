@@ -66,21 +66,27 @@ function loadData() {
   migrate();
 }
 
-// Convert any stored plaintext passwords to hashes (from earlier versions).
+// Convert any stored plaintext passwords to encrypted/hashed (from earlier versions),
+// and assign the kiosk account its own role.
 function migrate() {
   let changed = false;
   (state.users || []).forEach(u => {
-    // Students keep a plaintext password (so the teacher can view it);
-    // admin passwords are hashed. Migrate old admin hashes-as-password here.
-    if (u.role === "student") {
-      if (u.pw && !u.password) { /* student had a hash — not viewable; leave as-is */ }
-    } else if (u.password && !u.pw) {
+    // kiosk gets its own role
+    if (u.username === "kiosk" && u.role !== "kiosk") { u.role = "kiosk"; changed = true; }
+    const viewable = VIEWABLE_ROLES.includes(u.role);
+    if (viewable && u.password && typeof u.password === "string" && !u.password.iv) {
+      // plaintext student/kiosk password -> encrypt it
+      u.password = encryptPassword(u.password); changed = true;
+    } else if (viewable && u.pw && !u.password) {
+      // a previously-hashed viewable account: nothing to decrypt; leave as-is
+    } else if (!viewable && u.password && !u.pw) {
       u.pw = hashPassword(u.password); delete u.password; changed = true;
     }
     if (u.pw === undefined && u.password === undefined && u.passwordChangeRequired === undefined) u.passwordChangeRequired = false;
   });
   state.settings = Object.assign(defaultState().settings, state.settings || {});
   if (state.kioskLog === undefined) state.kioskLog = [];
+  if (state.settings.room === undefined) state.settings.room = "204";
   if (changed) persist();
 }
 
@@ -91,18 +97,54 @@ function persist() {
 }
 
 /* ------------------------------ passwords ------------------------------ */
+// Secret key used to encrypt viewable passwords (students, kiosk). Kept in a
+// file so decryption works across restarts. Admin passwords are scrypt-hashed
+// (one-way) and are never recoverable.
+const SECRET_FILE = path.join(ROOT, "library-secret.key");
+let SECRET = "";
+function loadSecret() {
+  try { SECRET = fs.readFileSync(SECRET_FILE, "utf8").trim(); } catch (e) {}
+  if (SECRET.length < 16) {
+    SECRET = crypto.randomBytes(32).toString("hex");
+    try { fs.writeFileSync(SECRET_FILE, SECRET, { mode: 0o600 }); } catch (e) {}
+  }
+}
+loadSecret();
+
 function hashPassword(pw) {
   const salt = crypto.randomBytes(16).toString("hex");
   const hash = crypto.scryptSync(String(pw), salt, 64).toString("hex");
   return { salt, hash };
 }
+// Encrypt a password so it can be decrypted on request (AES-256-GCM).
+function encryptPassword(plaintext) {
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv("aes-256-gcm", Buffer.from(SECRET, "hex").slice(0, 32), iv);
+  const enc = Buffer.concat([cipher.update(String(plaintext), "utf8"), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return { iv: iv.toString("base64"), tag: tag.toString("base64"), data: enc.toString("base64") };
+}
+function decryptPassword(enc) {
+  try {
+    const iv = Buffer.from(enc.iv, "base64");
+    const tag = Buffer.from(enc.tag, "base64");
+    const data = Buffer.from(enc.data, "base64");
+    const decipher = crypto.createDecipheriv("aes-256-gcm", Buffer.from(SECRET, "hex").slice(0, 32), iv);
+    decipher.setAuthTag(tag);
+    return Buffer.concat([decipher.update(data), decipher.final()]).toString("utf8");
+  } catch (e) { return ""; }
+}
+
+// Roles whose passwords the teacher (admin) is allowed to view on request.
+const VIEWABLE_ROLES = ["student", "kiosk"];
+
 function verifyPassword(pw, user) {
   if (!user) return false;
-  // Students store a plaintext password so the teacher (admin) can view it.
-  if (user.role === "student" && user.password !== undefined) {
-    return String(user.password) === String(pw);
+  // Students/kiosk store an encrypted password; decrypt and compare.
+  if (VIEWABLE_ROLES.includes(user.role) && user.password) {
+    return decryptPassword(user.password) === String(pw);
   }
-  // Admin (and any other non-student) passwords are hashed.
+  // Admin (and other staff) passwords are scrypt-hashed.
   if (user.pw) {
     const { salt, hash } = user.pw;
     try {
@@ -115,13 +157,14 @@ function verifyPassword(pw, user) {
 }
 
 // Redact a user for the client.
-//  - Student: keep the plaintext `password` so the admin can view it.
-//  - Admin:   hide the password entirely (hashed `pw`), expose hasPassword.
+//  - Students/kiosk: include the decrypted password so the admin can view it.
+//  - Admin:          hide the password entirely (hashed `pw`), expose hasPassword.
 function redact(u) {
   const out = Object.assign({}, u);
-  if (u.role === "student") {
+  if (VIEWABLE_ROLES.includes(u.role)) {
     delete out.pw;
-    out.hasPassword = !!out.password;
+    out.password = u.password ? decryptPassword(u.password) : "";
+    out.hasPassword = !!u.password;
   } else {
     out.hasPassword = !!u.pw;
     delete out.pw;
@@ -134,11 +177,11 @@ function redactState() {
 }
 
 // Store a new password for a user, role-aware:
-//  - student -> plaintext `password` (teacher can see it)
-//  - admin   -> hashed `pw` (never exposed)
+//  - students & kiosk -> encrypted `password` (teacher can view on request)
+//  - admin             -> hashed `pw` (never exposed)
 function storePassword(u, plaintext) {
-  if (u.role === "student") {
-    u.password = String(plaintext);
+  if (VIEWABLE_ROLES.includes(u.role)) {
+    u.password = encryptPassword(plaintext);
     delete u.pw;
   } else {
     u.pw = hashPassword(plaintext);
@@ -187,11 +230,13 @@ function mergeState(incoming) {
   const merged = Object.assign(defaultState(), state || {}, incoming);
   merged.users = (merged.users || []).map(u => {
     const prev = (state && state.users || []).find(x => x.id === u.id);
-    const isStudent = u.role === "student";
-    if (isStudent) {
-      // Keep plaintext password; preserve the stored one if none provided.
+    const viewable = VIEWABLE_ROLES.includes(u.role);
+    if (viewable) {
+      // Students/kiosk: preserve the stored encrypted password if none is
+      // provided; encrypt any plaintext that arrives.
       if (!u.password && prev && prev.password) u.password = prev.password;
-      if (u.pw) delete u.pw; // don't store hashes for students
+      else if (u.password && typeof u.password === "string" && !u.password.iv) u.password = encryptPassword(u.password);
+      if (u.pw) delete u.pw;
     } else {
       // Admin: keep the existing hash unless a plaintext password is provided.
       if (!u.pw && !u.password && prev && prev.pw) u.pw = prev.pw;

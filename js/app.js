@@ -286,10 +286,25 @@
     toast("The request form isn't loaded yet. Try a hard refresh (Ctrl+Shift+R).", "error");
   };
 
+ // Replace "Room 204" in the page with the configured room number.
+ function applyRoom() {
+   const room = (Store.getState().settings && Store.getState().settings.room) || "204";
+   document.body.querySelectorAll("*").forEach(el => {
+     const nodes = el.childNodes;
+     nodes.forEach(n => {
+       if (n.nodeType === 3 && /Room\s*204/i.test(n.textContent)) {
+         n.textContent = n.textContent.replace(/Room\s*204/gi, "Room " + room);
+       }
+     });
+   });
+ }
+ window.applyRoom = applyRoom;
+
  /* ------------------------------- init ----------------------------- */
  document.addEventListener("DOMContentLoaded", () => {
  S.seedIfEmpty();
  renderUserNav();
+ applyRoom();
  // #12: PWA — register service worker for offline + installability.
  if ("serviceWorker" in navigator) {
    try { navigator.serviceWorker.register("sw.js").catch(() => {}); } catch (e) {}

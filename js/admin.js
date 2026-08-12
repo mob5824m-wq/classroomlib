@@ -309,9 +309,11 @@
     const demoMode = $("#demo-mode");
     const removeBtn = $("#remove-demo-accounts");
     const demoMsg = $("#demo-msg");
+    const roomInput = $("#room-number");
     if (!sel || !hide) return;
     sel.innerHTML = `<option value="">None</option>` + st.books.map(b => `<option value="${b.id}" ${st.settings && st.settings.featuredBookId === b.id ? "selected" : ""}>${esc(b.title)}</option>`).join("");
     hide.checked = !!(st.settings && st.settings.hideDemoAccounts);
+    if (roomInput) roomInput.value = (st.settings && st.settings.room) || "204";
     if (demoMode) demoMode.checked = !(st.settings && st.settings.demoMode === false);
     if (removeBtn) removeBtn.addEventListener("click", () => {
       if (!confirm("Remove all demo student accounts (Alex, Mia, Jamal, etc.) and the Kiosk account? Their loans and charges will be removed too.")) return;
@@ -328,7 +330,9 @@
       st2.settings.featuredBookId = sel.value;
       st2.settings.hideDemoAccounts = hide.checked;
       if (demoMode) st2.settings.demoMode = demoMode.checked;
+      if (roomInput) st2.settings.room = roomInput.value.trim() || "204";
       S.save(st2);
+      if (typeof window.applyRoom === "function") window.applyRoom();
       toast("Home page settings saved.");
     };
   }

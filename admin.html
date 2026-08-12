@@ -5,15 +5,15 @@
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
  <title>Admin · Our Classroom Library</title>
- <link rel="stylesheet" href="css/style.css?v=29">
- <script defer src="js/store.js?v=29"></script>
- <script defer src="js/app.js?v=29"></script>
-  <script defer src="js/a11y.js?v=29"></script>
- <script defer src="js/barcode.js?v=29"></script>
- <script defer src="js/covers.js?v=29"></script>
- <script defer src="js/scanner.js?v=29"></script>
- <script defer src="js/scan.js?v=29"></script>
- <script defer src="js/admin.js?v=29"></script>
+ <link rel="stylesheet" href="css/style.css?v=30">
+ <script defer src="js/store.js?v=30"></script>
+ <script defer src="js/app.js?v=30"></script>
+  <script defer src="js/a11y.js?v=30"></script>
+ <script defer src="js/barcode.js?v=30"></script>
+ <script defer src="js/covers.js?v=30"></script>
+ <script defer src="js/scanner.js?v=30"></script>
+ <script defer src="js/scan.js?v=30"></script>
+ <script defer src="js/admin.js?v=30"></script>
 </head>
 <body>
  <div id="scan-mode" hidden></div>
@@ -28,6 +28,7 @@
         <a data-page="kiosk.html" href="kiosk.html">Checkout</a>
  <a data-page="how-to-check-out.html" href="how-to-check-out.html">How to Check Out</a>
  <a data-page="my-library.html" href="my-library.html">My Library</a>
+        <a data-page="sitemap.html" href="sitemap.html">Site Map</a>
  <a data-page="admin.html" href="admin.html">Admin</a>
  </nav>
  <div id="user-area"></div>
@@ -243,6 +244,10 @@
           <div class="field" style="margin-bottom:14px"><label>Book of the week</label>
             <select id="featured-book"></select>
             <p class="muted small">Shown in a spotlight section on the home page.</p>
+          </div>
+          <div class="field" style="margin-bottom:14px"><label>Room number</label>
+            <input id="room-number" type="text" placeholder="e.g. 204" style="max-width:200px">
+            <p class="muted small">Shown in the top bar and footer as "Room # Library".</p>
           </div>
           <div class="filters">
             <label class="field" style="flex-direction:row;align-items:center;gap:8px;font-weight:600">

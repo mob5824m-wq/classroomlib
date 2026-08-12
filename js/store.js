@@ -95,7 +95,7 @@ const Store = (function () {
  u("zoe", "Zoe Martin", "read123", "student", "8th Grade", "8A"),
  u("david", "David Okafor", "read123", "student", "8th Grade", "8B"),
  u("ella", "Ella Brooks", "read123", "student", "8th Grade", "8B"),
- u("kiosk", "Demo Student", "kiosk", "student", "Demo", "7A"),
+ u("kiosk", "Checkout Kiosk", "kiosk", "kiosk", "Demo", ""),
  ];
 
  function u(username, name, password, role, grade, klass) {
@@ -147,6 +147,7 @@ const Store = (function () {
       featuredBookId: "",      // #11: book of the week
       kioskEnabled: true,      // #3: allow the kiosk to check out
       demoMode: true,          // demo examples shown
+      room: "204",             // room number (teacher-editable)
     },
   });
 
