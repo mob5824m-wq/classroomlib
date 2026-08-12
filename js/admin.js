@@ -148,24 +148,82 @@
     if (!box) return;
     const st = S.getState();
     const clubs = (st.clubs || []).slice().sort((a, b) => b.created - a.created);
+    const createBtn = $("#tab-clubs [data-create-group]");
+    if (createBtn) createBtn.addEventListener("click", () => groupForm(null));
     box.innerHTML = clubs.length
       ? `<div class="table-wrap"><table>
-          <thead><tr><th>Club</th><th>Description</th><th>Book</th><th>Members</th><th>Posts</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Group</th><th>Book to get</th><th>Members</th><th>Posts</th><th>Actions</th></tr></thead>
           <tbody>${clubs.map(c => {
             const book = c.bookId ? st.books.find(b => b.id === c.bookId) : null;
             return `<tr>
-              <td><strong>${esc(c.name)}</strong></td>
-              <td class="muted small">${esc(c.description || "—")}</td>
-              <td>${book ? esc(book.title) : "—"}</td>
+              <td><strong>${esc(c.name)}</strong>${c.description ? `<div class="muted small">${esc(c.description)}</div>` : ""}</td>
+              <td>${book ? `<strong>${esc(book.title)}</strong><div class="muted small">${esc(book.author)}</div>` : `<span class="badge badge-warn">No book</span>`}</td>
               <td>${c.members.length}</td>
               <td>${(st.clubPosts || []).filter(p => p.clubId === c.id).length}</td>
-              <td><button class="btn btn-danger-ghost btn-sm" data-del-club="${c.id}">Delete</button></td>
+              <td>
+                <div class="row-actions">
+                  <button class="btn btn-outline btn-sm" data-edit-group="${c.id}">Edit</button>
+                  <button class="btn btn-danger-ghost btn-sm" data-del-club="${c.id}">Delete</button>
+                </div>
+              </td>
             </tr>`;
           }).join("")}</tbody></table></div>`
-      : `<p class="muted">No clubs yet.</p>`;
+      : `<p class="muted">No reading groups yet. Click "+ New reading group" to create one.</p>`;
     box.querySelectorAll("[data-del-club]").forEach(b => b.addEventListener("click", () => {
-      if (confirm("Delete this club and its discussion?")) { S.deleteClub(b.dataset.delClub, S.getState()); renderClubsAdmin(); }
+      if (confirm("Delete this group and its discussion?")) { S.deleteClub(b.dataset.delClub, S.getState()); renderClubsAdmin(); }
     }));
+    box.querySelectorAll("[data-edit-group]").forEach(b => b.addEventListener("click", () => groupForm(b.dataset.editGroup)));
+  }
+
+  // Teacher form to create/edit a reading group with an assigned book + members.
+  function groupForm(id) {
+    const st = S.getState();
+    const g = id ? (st.clubs || []).find(c => c.id === id) : null;
+    let modal = document.getElementById("group-modal");
+    if (!modal) { modal = document.createElement("div"); modal.id = "group-modal"; modal.className = "modal"; document.body.appendChild(modal); }
+    const students = st.users.filter(u => u.role === "student");
+    modal.innerHTML = `
+      <div class="modal-card wide" id="group-modal-body">
+        <button class="modal-x" data-x>&times;</button>
+        <h2>${g ? "Edit reading group" : "New reading group"}</h2>
+        <form id="group-form">
+          <label>Group name <input name="name" value="${esc(g ? g.name : "")}" required placeholder="e.g. 7A Adventure Readers"></label>
+          <label>Description <textarea name="desc" rows="2" placeholder="What will this group do?">${esc(g ? g.description : "")}</textarea></label>
+          <label>Book to read
+            <select name="book">
+              <option value="">No book assigned yet</option>
+              ${st.books.map(b => `<option value="${b.id}" ${g && g.bookId === b.id ? "selected" : ""}>${esc(b.title)}</option>`).join("")}
+            </select>
+          </label>
+          <label>Students in this group
+            <select name="members" multiple size="6" style="width:100%">
+              ${students.map(u => `<option value="${u.id}" ${g && g.members.includes(u.id) ? "selected" : ""}>${esc(u.name)} (${esc(u.class || "")})</option>`).join("")}
+            </select>
+            <span class="muted small">Hold Ctrl/Cmd to select more than one.</span>
+          </label>
+          <button class="btn btn-primary btn-block" type="submit">${g ? "Save group" : "Create group"}</button>
+        </form>
+      </div>`;
+    modal.classList.add("open");
+    modal.querySelector("[data-x]").addEventListener("click", () => modal.classList.remove("open"));
+    modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("open"); });
+    modal.querySelector("#group-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target).entries());
+      const memberIds = Array.from(e.target.querySelector('[name="members"]').selectedOptions).map(o => o.value);
+      let res;
+      if (g) {
+        res = S.updateClub(g.id, { name: data.name, description: data.desc }, st);
+        // set members (admin is always a member)
+        if (res.ok) { g.members = memberIds; if (!g.members.includes(g.adminId)) g.members.push(g.adminId); }
+        S.save(st);
+      } else {
+        res = S.createClub(data.name, data.desc, S.currentUser().id, st);
+        if (res.ok) { res.club.members = memberIds; res.club.bookId = data.book; S.save(st); }
+      }
+      if (res.ok) { if (data.book) S.updateClub(res.club ? res.club.id : g.id, { bookId: data.book }, S.getState()); modal.classList.remove("open"); toast(g ? "Group updated." : "Reading group created!"); renderClubsAdmin(); }
+      else toast(res.msg, "error");
+    });
   }
 
   /* --------------------------- reading admin -------------------------- */

@@ -5,15 +5,15 @@
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
  <title>Admin · Our Classroom Library</title>
- <link rel="stylesheet" href="css/style.css?v=26">
- <script defer src="js/store.js?v=26"></script>
- <script defer src="js/app.js?v=26"></script>
-  <script defer src="js/a11y.js?v=26"></script>
- <script defer src="js/barcode.js?v=26"></script>
- <script defer src="js/covers.js?v=26"></script>
- <script defer src="js/scanner.js?v=26"></script>
- <script defer src="js/scan.js?v=26"></script>
- <script defer src="js/admin.js?v=26"></script>
+ <link rel="stylesheet" href="css/style.css?v=27">
+ <script defer src="js/store.js?v=27"></script>
+ <script defer src="js/app.js?v=27"></script>
+  <script defer src="js/a11y.js?v=27"></script>
+ <script defer src="js/barcode.js?v=27"></script>
+ <script defer src="js/covers.js?v=27"></script>
+ <script defer src="js/scanner.js?v=27"></script>
+ <script defer src="js/scan.js?v=27"></script>
+ <script defer src="js/admin.js?v=27"></script>
 </head>
 <body>
  <div id="scan-mode" hidden></div>
@@ -210,7 +210,10 @@
       <!-- Clubs -->
       <section class="tab-panel" id="tab-clubs" hidden>
         <div class="card">
-          <div class="card-head"><h3>Book clubs &amp; reading groups</h3></div>
+          <div class="card-head"><h3>Reading groups</h3>
+            <button class="btn btn-primary btn-sm" data-create-group>+ New reading group</button>
+          </div>
+          <p class="muted small">Create reading groups, assign a book to each so students know what to get, and choose which students are in the group.</p>
           <div id="clubs-admin"><p class="muted">Loading…</p></div>
         </div>
         <div class="card" style="margin-top:16px">

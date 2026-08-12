@@ -192,7 +192,9 @@
          ${mine ? `<button class="btn btn-danger-ghost btn-sm" data-leave-club="${c.id}">Leave</button>` : `<button class="btn btn-primary btn-sm" data-join-club="${c.id}">Join</button>`}
        </div>
        ${c.description ? `<p class="muted small">${esc(c.description)}</p>` : ""}
-       <p class="small">${book ? `Reading: <strong>${esc(book.title)}</strong>` : "No book assigned yet."}</p>
+       ${book
+         ? `<div class="callout" style="padding:10px 12px"><span>BOOK</span><div><strong>Your book to get: ${esc(book.title)}</strong>${book.author ? `<div class="small muted">by ${esc(book.author)}</div>` : ""}</div></div>`
+         : `<p class="muted small">No book assigned yet — check back soon.</p>`}
        ${mine ? `<button class="btn btn-soft btn-sm" data-open-club="${c.id}">Open discussion</button>` : ""}
      </div>`;
    }).join("");
