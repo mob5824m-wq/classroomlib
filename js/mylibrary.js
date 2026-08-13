@@ -207,15 +207,22 @@
    box.innerHTML = all.map(c => {
      const mine = c.members.includes(user.id);
      const book = c.bookId ? st.books.find(b => b.id === c.bookId) : null;
+     const hasRead = mine && (c.readBy || []).includes(user.id);
+     const unread = mine ? S.unreadPosts(c, user.id, st) : 0;
      return `<div class="card" style="margin-bottom:10px">
        <div class="card-head">
-         <h3 style="margin:0">${esc(c.name)} <span class="badge" style="background:#eef1f3;color:var(--ink-soft)">${c.members.length} member${c.members.length === 1 ? "" : "s"}</span></h3>
+         <h3 style="margin:0">${esc(c.name)}
+           <span class="badge" style="background:#eef1f3;color:var(--ink-soft)">${c.members.length} member${c.members.length === 1 ? "" : "s"}</span>
+           ${mine && unread > 0 ? `<span class="badge badge-warn">${unread} new post${unread === 1 ? "" : "s"}</span>` : ""}
+           ${hasRead ? `<span class="badge badge-avail">Read</span>` : ""}
+         </h3>
          ${mine ? `<button class="btn btn-danger-ghost btn-sm" data-leave-club="${c.id}">Leave</button>` : `<button class="btn btn-primary btn-sm" data-join-club="${c.id}">Join</button>`}
        </div>
        ${c.description ? `<p class="muted small">${esc(c.description)}</p>` : ""}
        ${book
          ? `<div class="callout" style="padding:10px 12px"><span>BOOK</span><div><strong>Your book to get: ${esc(book.title)}</strong>${book.author ? `<div class="small muted">by ${esc(book.author)}</div>` : ""}
             ${(c.pages || c.dueDate) ? `<div class="small muted" style="margin-top:4px">Read: <strong>${esc(c.pages || "all")}</strong>${c.dueDate ? ` · Due: <strong>${esc(c.dueDate)}</strong>` : ""}</div>` : ""}
+            ${mine && c.bookId ? `<button class="btn btn-soft btn-sm" style="margin-top:6px" data-toggle-read="${c.id}">${hasRead ? "Mark as not read" : "Mark as read"}</button>` : ""}
            </div></div>`
          : `<p class="muted small">No book assigned yet — check back soon.</p>`}
        ${mine ? `<button class="btn btn-soft btn-sm" data-open-club="${c.id}">Open discussion</button>` : ""}
@@ -229,6 +236,11 @@
      S.leaveClub(b.dataset.leaveClub, user.id, S.getState()); toast("Left the club."); render();
    }));
    box.querySelectorAll("[data-open-club]").forEach(b => b.addEventListener("click", () => openClub(b.dataset.openClub, user)));
+   box.querySelectorAll("[data-toggle-read]").forEach(b => b.addEventListener("click", () => {
+     S.toggleClubRead(b.dataset.toggleRead, user.id, S.getState());
+     toast("Updated.");
+     render();
+   }));
  }
 
  function createClub(user) {
@@ -280,6 +292,8 @@
          <button class="btn btn-primary" type="submit">Post</button>
        </form>
      </div>`;
+   // Opening the discussion marks it seen (clears the "new" badge).
+   S.markClubSeen(clubId, user.id, S.getState());
    modal.classList.add("open");
    modal.querySelector("[data-x]").addEventListener("click", () => modal.classList.remove("open"));
    modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("open"); });

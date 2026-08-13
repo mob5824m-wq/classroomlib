@@ -43,16 +43,16 @@ const Store = (function () {
 
  /* ------------------------------ Seed data ------------------------------ */
  const seedBooks = () => [
- b("The Giver", "Lois Lowry", "Sci-Fi", "novel", "9780544340688", 3, 9.99, "good", 14, 40, 4.5, 8),
+ b("The Giver", "Lois Lowry", "Sci-Fi", "novel", "9780544340688", 3, 9.99, "good", 14, 40, 4.5, 8, "760L"),
  b("Holes", "Louis Sachar", "Adventure", "novel", "9780440414803", 4, 8.99, "fair", 22, 55, 4.3, 10),
- b("Wonder", "R.J. Palacio", "Realistic Fiction", "novel", "9780375869020", 2, 9.99, "new", 18, 35, 4.8, 12),
+ b("Wonder", "R.J. Palacio", "Realistic Fiction", "novel", "9780375869020", 2, 9.99, "new", 18, 35, 4.8, 12, "790L"),
  b("Percy Jackson and the Olympians", "Rick Riordan", "Fantasy", "novel", "9780786838653", 5, 9.99, "good", 26, 60, 4.7, 15),
- b("The Hunger Games", "Suzanne Collins", "Sci-Fi", "novel", "9780439023481", 4, 9.99, "good", 20, 50),
+ b("The Hunger Games", "Suzanne Collins", "Sci-Fi", "novel", "9780439023481", 4, 9.99, "good", 20, 50, 0, 0, "810L"),
  b("Out of My Mind", "Sharon M. Draper", "Realistic Fiction", "novel", "9781416971719", 2, 8.99, "good", 8, 20),
  b("Roll of Thunder, Hear My Cry", "Mildred D. Taylor", "Historical", "novel", "9780140384512", 2, 8.99, "fair", 6, 15),
  b("The Outsiders", "S.E. Hinton", "Historical", "novel", "9780140385724", 3, 8.99, "good", 11, 30),
  b("Amulet: The Stonekeeper", "Kazu Kibuishi", "Graphic Novel", "graphic", "9780439846813", 4, 12.99, "good", 24, 48),
- b("Smile", "Raina Telgemeier", "Graphic Novel", "graphic", "9780545132060", 4, 10.99, "good", 21, 52, 4.6, 9),
+ b("Smile", "Raina Telgemeier", "Graphic Novel", "graphic", "9780545132060", 4, 10.99, "good", 21, 52, 4.6, 9, "410L"),
  b("Ghost", "Jason Reynolds", "Sports", "novel", "9781481450164", 3, 10.99, "new", 16, 33, 4.4, 6),
  b("The Boy Who Harnessed the Wind", "William Kamkwamba", "Biography", "nonfiction", "9780803735118", 2, 18.99, "good", 7, 18, 4.5, 5),
  b("Hidden Figures", "Margot Lee Shetterly", "Non-Fiction", "nonfiction", "9780062662378", 3, 16.99, "good", 9, 22, 4.6, 7),
@@ -65,14 +65,15 @@ const Store = (function () {
 
  // Helper to build a book object.
  function b(title, author, genre, type, isbn, totalCopies, basePrice,
- condition, checkoutCount, popularityDays, rating = 0, ratingCount = 0) {
+ condition, checkoutCount, popularityDays, rating = 0, ratingCount = 0, lexile = "") {
  return {
  id: uid(),
  title, author, genre, type, isbn,
  totalCopies, basePrice, condition,
- addedOn: Date.now(),
- desc: "",
- // Popularity signals: how many times it was checked out and how recent.
+    addedOn: Date.now(),
+    desc: "",
+    lexile,               // reading level / Lexile tag (optional)
+    // Popularity signals: how many times it was checked out and how recent.
  checkoutCount,
  recentCheckouts: popularityDays, // "momentum" within the last 30 days
  // Reader reviews / ratings (dynamic).
@@ -816,7 +817,7 @@ const Store = (function () {
   function createClub(name, description, adminId, st) {
     if (!name || !name.trim()) return { ok: false, msg: "Please give the club a name." };
     st.clubs = st.clubs || [];
-    const club = { id: uid(), name: name.trim(), description: (description || "").trim(), adminId, members: [adminId], bookId: "", created: Date.now() };
+    const club = { id: uid(), name: name.trim(), description: (description || "").trim(), adminId, members: [adminId], bookId: "", created: Date.now(), readBy: [], lastSeen: {} };
     st.clubs.push(club);
     save(st);
     return { ok: true, club };
@@ -872,6 +873,33 @@ const Store = (function () {
     return (st.clubPosts || []).filter(p => p.clubId === clubId).sort((a, b) => b.date - a.date);
   }
 
+  // Toggle whether the current user has finished reading the club's assigned book.
+  function toggleClubRead(clubId, userId, st) {
+    const club = (st.clubs || []).find(c => c.id === clubId);
+    if (!club) return { ok: false, msg: "Club not found." };
+    club.readBy = club.readBy || [];
+    if (club.readBy.includes(userId)) club.readBy = club.readBy.filter(u => u !== userId);
+    else club.readBy.push(userId);
+    save(st);
+    return { ok: true, read: club.readBy.includes(userId) };
+  }
+
+  // Record that the user has seen all posts in a club (marks discussion read).
+  function markClubSeen(clubId, userId, st) {
+    const club = (st.clubs || []).find(c => c.id === clubId);
+    if (!club) return;
+    club.lastSeen = club.lastSeen || {};
+    club.lastSeen[userId] = Date.now();
+    save(st);
+  }
+
+  // Number of posts in a club the user hasn't seen yet.
+  function unreadPosts(club, userId, st) {
+    const posts = (st.clubPosts || []).filter(p => p.clubId === club.id);
+    const lastSeen = (club.lastSeen && club.lastSeen[userId]) || 0;
+    return posts.filter(p => p.userId !== userId && p.date > lastSeen).length;
+  }
+
  /* ------------------------------ Public API ---------------------------- */
  return {
  getState, save, seedIfEmpty, resetAll, uid,
@@ -894,6 +922,7 @@ const Store = (function () {
     logReading, readingForUser, readingSummary,
     createClub, updateClub, deleteClub, joinClub, leaveClub, clubForUser,
     addClubPost, clubPosts,
+    toggleClubRead, markClubSeen, unreadPosts,
   };
 })();
 

@@ -5,6 +5,7 @@
 
  const el = {
  q: $("#q"), genre: $("#f-genre"), type: $("#f-type"),
+   level: $("#f-level"),
    avail: $("#f-avail"), sort: $("#f-sort"), results: $("#results"),
    count: $("#result-count"), clear: $("#clear-filters"),
    };
@@ -21,6 +22,13 @@
  const o = document.createElement("option");
  o.value = k; o.textContent = v.label;
  el.type.appendChild(o);
+ });
+ // Populate reading-level filter with the distinct levels in the catalog.
+ const levels = [...new Set(state.books.map(b => (b.lexile||"").trim()).filter(Boolean))].sort();
+ levels.forEach(lv => {
+   const o = document.createElement("option");
+   o.value = lv; o.textContent = lv;
+   el.level.appendChild(o);
  });
  }
 
@@ -56,6 +64,7 @@
  <div class="meta">
  <span class="badge" style="background:var(--teal-soft);color:var(--teal-dark)">${esc(S.TYPE_POLICY[book.type].label)}</span>
  <span class="badge badge-${pop.tier}">${pop.label}</span>
+ ${book.lexile ? `<span class="badge" style="background:var(--blue-soft);color:var(--blue)">${esc(book.lexile)}</span>` : ""}
  </div>
  <div class="meta">
  ${availBadge(book.id)}
@@ -80,6 +89,7 @@
  b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q));
  if (g) list = list.filter(b => b.genre === g);
  if (t) list = list.filter(b => b.type === t);
+ if (el.level.value) list = list.filter(b => (b.lexile||"").trim() === el.level.value);
  if (a === "avail") list = list.filter(b => S.availableCopies(b.id, state) > 0);
  if (a === "out") list = list.filter(b => S.availableCopies(b.id, state) <= 0);
 
@@ -200,6 +210,7 @@
  <tr><td>Loan length</td><td><strong>${S.loanDurationDays(book, state.books)} days</strong> (${esc(pop.label)})</td></tr>
  <tr><td>Replacement value</td><td><strong>${money(repl)}</strong> (if lost or damaged)</td></tr>
  <tr><td>ISBN</td><td>${esc(book.isbn)}</td></tr>
+ ${book.lexile ? `<tr><td>Reading level</td><td><strong>${esc(book.lexile)}</strong></td></tr>` : ""}
  </table>
  <div class="barcode-actions" style="justify-content:flex-start;margin-top:16px">
  ${borrowBtn}
@@ -365,9 +376,9 @@
  render();
  bindResultsDelegation();
  el.q.addEventListener("input", render);
- [el.genre, el.type, el.avail, el.sort].forEach(x => x.addEventListener("change", render));
+ [el.genre, el.type, el.level, el.avail, el.sort].forEach(x => x.addEventListener("change", render));
    el.clear.addEventListener("click", () => {
-   el.q.value = ""; el.genre.value = ""; el.type.value = ""; el.avail.value = ""; el.sort.value = "title";
+   el.q.value = ""; el.genre.value = ""; el.type.value = ""; el.level.value = ""; el.avail.value = ""; el.sort.value = "title";
    render();
    });
    // View toggle (#11)

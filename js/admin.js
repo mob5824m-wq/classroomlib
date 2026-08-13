@@ -606,6 +606,7 @@
  <td>${b.totalCopies}</td>
  <td>${S.availableCopies(b.id, st)}</td>
  <td>${esc(S.TYPE_POLICY[b.type].label)}</td>
+ <td>${b.lexile ? esc(b.lexile) : "—"}</td>
  <td>${money(b.basePrice)}</td>
  <td>${money(S.replacementPrice(b))}</td>
  <td>
@@ -616,7 +617,7 @@
  <button class="btn btn-danger-ghost btn-sm" data-del-book="${b.id}">Delete</button>
  </div>
  </td>
- </tr>`).join("") || `<tr><td colspan="7" class="muted">No books yet.</td></tr>`;
+ </tr>`).join("") || `<tr><td colspan="8" class="muted">No books yet.</td></tr>`;
 
  $$("[data-edit-book]").forEach(x => x.addEventListener("click", () => bookForm(x.dataset.editBook)));
  $$("[data-del-book]").forEach(x => x.addEventListener("click", () => deleteBook(x.dataset.delBook)));
@@ -711,6 +712,7 @@
  <span class="small muted" id="price-status"></span>
  </div>
  <div class="field"><label>Popularity (checkouts)</label><input name="checkoutCount" type="number" min="0" value="${b ? b.checkoutCount: 0}"></div>
+ <div class="field"><label>Reading level (Lexile)</label><input name="lexile" type="text" value="${esc(b ? (b.lexile || ""): "")}" placeholder="e.g. 740L or 7th"></div>
  </div>
  <label>Short description <textarea name="desc" rows="2" placeholder="Why readers will love this book…">${esc(b ? b.desc: (p.desc || ""))}</textarea></label>
  <button class="btn btn-primary btn-block" type="submit">${b ? "Save changes": "Add book"}</button>
@@ -751,7 +753,7 @@
  genre: data.genre, type: data.type, isbn: data.isbn,
  totalCopies: +data.copies, basePrice: +data.basePrice,
  condition: data.condition, checkoutCount: +data.checkoutCount,
- recentCheckouts: 0, desc: data.desc.trim(), addedOn: Date.now(),
+ recentCheckouts: 0, desc: data.desc.trim(), lexile: (data.lexile || "").trim(), addedOn: Date.now(),
  });
  if (requestId) { const r = st.requests.find(x => x.id === requestId); if (r) r.status = "approved"; }
  toast("Book added to the library! ", "success");
@@ -760,7 +762,7 @@
  title: data.title.trim(), author: data.author.trim(), genre: data.genre,
  type: data.type, isbn: data.isbn, totalCopies: +data.copies,
  basePrice: +data.basePrice, condition: data.condition,
- checkoutCount: +data.checkoutCount, desc: data.desc.trim(),
+ checkoutCount: +data.checkoutCount, desc: data.desc.trim(), lexile: (data.lexile || "").trim(),
  });
  toast("Book updated ", "success");
  }
@@ -1148,6 +1150,48 @@
  toast("Demo data reset. Please sign in again.", "success");
  setTimeout(() => location.reload(), 900);
  });
+ }
+
+ /* --------------------------- backup / restore ----------------------- */
+ function bindBackup() {
+   const exportBtn = $("#export-data");
+   const importBtn = $("#import-data");
+   const fileInput = $("#import-file");
+   const msg = $("#backup-msg");
+   if (!exportBtn) return;
+   exportBtn.addEventListener("click", () => {
+     const st = S.getState();
+     const blob = new Blob([JSON.stringify(st, null, 2)], { type: "application/json" });
+     const a = document.createElement("a");
+     a.href = URL.createObjectURL(blob);
+     a.download = "library-backup-" + new Date().toISOString().slice(0,10) + ".json";
+     document.body.appendChild(a); a.click(); a.remove();
+     toast("Backup downloaded.", "success");
+   });
+   if (importBtn && fileInput) {
+     importBtn.addEventListener("click", () => fileInput.click());
+     fileInput.addEventListener("change", () => {
+       const file = fileInput.files[0];
+       if (!file) return;
+       const reader = new FileReader();
+       reader.onload = () => {
+         try {
+           const data = JSON.parse(reader.result);
+           if (!data || !Array.isArray(data.books)) { msg.textContent = "That file doesn't look like a library backup."; return; }
+           if (!confirm("Replace the current data with this backup? This overwrites everything.")) { fileInput.value = ""; return; }
+           const st = S.getState();
+           Object.keys(data).forEach(k => { if (k !== "settings") st[k] = data[k]; });
+           st.settings = Object.assign(st.settings || {}, data.settings || {});
+           S.save(st);
+           msg.textContent = "Backup restored.";
+           toast("Backup restored.", "success");
+           render();
+         } catch (e) { msg.textContent = "Couldn't read that file: " + e.message; }
+       };
+       reader.readAsText(file);
+       fileInput.value = "";
+     });
+   }
  }
 
  /* ------------------------------- init ------------------------------ */

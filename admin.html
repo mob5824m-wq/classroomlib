@@ -5,15 +5,15 @@
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
  <title>Admin · Our Classroom Library</title>
- <link rel="stylesheet" href="css/style.css?v=33">
- <script defer src="js/store.js?v=33"></script>
- <script defer src="js/app.js?v=33"></script>
-  <script defer src="js/a11y.js?v=33"></script>
- <script defer src="js/barcode.js?v=33"></script>
- <script defer src="js/covers.js?v=33"></script>
- <script defer src="js/scanner.js?v=33"></script>
- <script defer src="js/scan.js?v=33"></script>
- <script defer src="js/admin.js?v=33"></script>
+ <link rel="stylesheet" href="css/style.css?v=34">
+ <script defer src="js/store.js?v=34"></script>
+ <script defer src="js/app.js?v=34"></script>
+  <script defer src="js/a11y.js?v=34"></script>
+ <script defer src="js/barcode.js?v=34"></script>
+ <script defer src="js/covers.js?v=34"></script>
+ <script defer src="js/scanner.js?v=34"></script>
+ <script defer src="js/scan.js?v=34"></script>
+ <script defer src="js/admin.js?v=34"></script>
 </head>
 <body>
  <div id="scan-mode" hidden></div>
@@ -121,7 +121,7 @@
  </div>
  <div class="table-wrap">
  <table>
- <thead><tr><th>Title</th><th>Copies</th><th>Avail</th><th>Type</th><th>Price</th><th>Replacement</th><th>Actions</th></tr></thead>
+ <thead><tr><th>Title</th><th>Copies</th><th>Avail</th><th>Type</th><th>Level</th><th>Price</th><th>Replacement</th><th>Actions</th></tr></thead>
  <tbody id="books-tbody"></tbody>
  </table>
  </div>
@@ -295,6 +295,17 @@
  <p class="small muted">Replacement price = base price × condition × popularity boost.</p>
  <div class="table-wrap"><table><thead><tr><th>Condition</th><th>Multiplier</th></tr></thead><tbody id="cond-tbody"></tbody></table></div>
  </div>
+ </section>
+
+ <section class="card">
+ <div class="card-head"><h3>Backup / restore</h3></div>
+ <p class="muted small">Download a backup of all library data (books, students, loans, groups, settings) as a JSON file. Keep it somewhere safe — see README about the password encryption key.</p>
+ <div style="display:flex;gap:8px;flex-wrap:wrap">
+ <button class="btn btn-primary" id="export-data">Download backup (JSON)</button>
+ <button class="btn btn-outline" id="import-data">Restore from backup…</button>
+ <input type="file" id="import-file" accept=".json,application/json" hidden>
+ </div>
+ <p class="small muted" id="backup-msg" style="margin-top:8px"></p>
  </section>
 
  <section class="card">
