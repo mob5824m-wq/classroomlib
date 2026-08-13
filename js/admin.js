@@ -310,10 +310,14 @@
     const removeBtn = $("#remove-demo-accounts");
     const demoMsg = $("#demo-msg");
     const roomInput = $("#room-number");
+    const goalMin = $("#goal-minutes");
+    const goalPages = $("#goal-pages");
     if (!sel || !hide) return;
     sel.innerHTML = `<option value="">None</option>` + st.books.map(b => `<option value="${b.id}" ${st.settings && st.settings.featuredBookId === b.id ? "selected" : ""}>${esc(b.title)}</option>`).join("");
     hide.checked = !!(st.settings && st.settings.hideDemoAccounts);
     if (roomInput) roomInput.value = (st.settings && st.settings.room) || "204";
+    if (goalMin) goalMin.value = (st.settings && st.settings.readingGoalMinutes) || 0;
+    if (goalPages) goalPages.value = (st.settings && st.settings.readingGoalPages) || 0;
     if (demoMode) demoMode.checked = !(st.settings && st.settings.demoMode === false);
     if (removeBtn) removeBtn.addEventListener("click", () => {
       if (!confirm("Remove all demo student accounts (Alex, Mia, Jamal, etc.) and the Kiosk account? Their loans and charges will be removed too.")) return;
@@ -331,6 +335,8 @@
       st2.settings.hideDemoAccounts = hide.checked;
       if (demoMode) st2.settings.demoMode = demoMode.checked;
       if (roomInput) st2.settings.room = roomInput.value.trim() || "204";
+      if (goalMin) st2.settings.readingGoalMinutes = Math.max(0, +goalMin.value || 0);
+      if (goalPages) st2.settings.readingGoalPages = Math.max(0, +goalPages.value || 0);
       S.save(st2);
       if (typeof window.applyRoom === "function") window.applyRoom();
       toast("Home page settings saved.");
@@ -1161,13 +1167,23 @@
    if (!exportBtn) return;
    exportBtn.addEventListener("click", () => {
      const st = S.getState();
+     st.settings = st.settings || {}; st.settings.lastBackup = Date.now(); S.save(st);
      const blob = new Blob([JSON.stringify(st, null, 2)], { type: "application/json" });
      const a = document.createElement("a");
      a.href = URL.createObjectURL(blob);
      a.download = "library-backup-" + new Date().toISOString().slice(0,10) + ".json";
      document.body.appendChild(a); a.click(); a.remove();
      toast("Backup downloaded.", "success");
+     render();
    });
+   // Backup reminder: warn if no backup in the last 30 days.
+   const DAY = 86400000;
+   const last = (st.settings && st.settings.lastBackup) || 0;
+   if (msg && last && Date.now() - last > 30 * DAY) {
+     msg.textContent = "Reminder: it's been over 30 days since your last backup.";
+   } else if (msg && !last) {
+     msg.textContent = "Tip: download a backup when you first set things up.";
+   }
    if (importBtn && fileInput) {
      importBtn.addEventListener("click", () => fileInput.click());
      fileInput.addEventListener("change", () => {
@@ -1198,6 +1214,7 @@
   function init() {
     bindTabs();
     bindReset();
+    bindBackup();
     bindReminders();
     render();
  window.onAuthChange = render;

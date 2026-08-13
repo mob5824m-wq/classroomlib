@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>Teacher Guide · Our Classroom Library</title>
+  <link rel="stylesheet" href="css/style.css?v=35">
+  <script defer src="js/store.js?v=35"></script>
+  <script defer src="js/app.js?v=35"></script>
+  <script defer src="js/a11y.js?v=35"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="index.html">
+        <span class="logo"></span>
+        <span>Room 204 Library<small>Teacher Guide</small></span>
+      </a>
+      <nav class="nav">
+        <a data-page="index.html" href="index.html">Home</a>
+        <a data-page="catalog.html" href="catalog.html">Catalog</a>
+        <a data-page="kiosk.html" href="kiosk.html">Checkout</a>
+        <a data-page="my-library.html" href="my-library.html">My Library</a>
+        <a data-page="sitemap.html" href="sitemap.html">Site Map</a>
+        <a data-page="guide.html" href="guide.html">Guide</a>
+      </nav>
+      <div id="user-area"></div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="page-head">
+      <h1>Teacher getting started</h1>
+      <p class="muted">A quick tour of the librarian controls so you're ready to go in a few minutes.</p>
+    </div>
+
+    <section class="card">
+      <div class="card-head"><h2>1. Sign in as admin</h2></div>
+      <p>Click <strong>Sign in</strong> in the top bar and use the admin account (<code>admin</code> / <code>admin123</code> — change it in <strong>Admin → My Account</strong>). You'll land on the <strong>Admin Dashboard</strong>.</p>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>2. Add your books</h2></div>
+      <p><strong>Admin → Books → + Add book</strong>. Enter the title, author, and 13-digit ISBN. The site can auto-fill the cover, description, and a retail price. You can set a <strong>reading level (Lexile)</strong> for each book.</p>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>3. Add your students</h2></div>
+      <p><strong>Admin → Students</strong>. Use <strong>+ Add student</strong> (one at a time) or <strong>Bulk add</strong> to paste a list — optionally <code>Name | Class</code>. Each student gets a class (7A/7B/8A/8B). Student passwords are encrypted but you can view them via the <strong>View</strong> button.</p>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>4. Create reading groups</h2></div>
+      <p><strong>Admin → Reading groups → + New reading group</strong>. Assign a <strong>book</strong>, <strong>pages to read</strong>, a <strong>due date</strong>, and pick the students. They'll see "Your book to get" on their My Library page.</p>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>5. Point students to the right pages</h2></div>
+      <ul style="margin:0;padding-left:20px">
+        <li><strong>Home</strong> — announcements, featured picks, top rated.</li>
+        <li><strong>Catalog</strong> — browse/search, check out, place holds, review books.</li>
+        <li><strong>Checkout</strong> — the no-login kiosk for scanning books in/out.</li>
+        <li><strong>My Library</strong> — their books, holds, reading log, clubs, and account.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Handy admin settings</h2></div>
+      <ul style="margin:0;padding-left:20px">
+        <li><strong>Home Page</strong> — change the room number, set a Book of the Week.</li>
+        <li><strong>Backup / restore</strong> — download a JSON backup of everything.</li>
+        <li><strong>Kiosk</strong> — turn the checkout kiosk on/off and see its activity.</li>
+        <li><strong>Reports</strong> — who has what, overdue, most popular — export to CSV.</li>
+        <li><strong>Announcements</strong> — post notices that appear on the home page.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <strong>Room 204 Classroom Library</strong> · Teacher guide
+    </div>
+  </footer>
+</body>
+</html>

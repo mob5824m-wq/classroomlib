@@ -149,6 +149,9 @@ const Store = (function () {
       kioskEnabled: true,      // #3: allow the kiosk to check out
       demoMode: true,          // demo examples shown
       room: "204",             // room number (teacher-editable)
+      readingGoalMinutes: 0,   // weekly reading goal (minutes) — 0 = off
+      readingGoalPages: 0,     // weekly reading goal (pages) — 0 = off
+      lastBackup: 0,           // timestamp of last backup (for reminders)
     },
   });
 
@@ -813,6 +816,16 @@ const Store = (function () {
     return { totalMinutes, totalPages, entries: entries.length, streak };
   }
 
+  // Reading progress within the current calendar week (Mon–Sun) for a user.
+  function readingThisWeek(userId, st) {
+    const now = new Date();
+    const dow = (now.getDay() + 6) % 7; // 0=Monday
+    const monday = new Date(now); monday.setHours(0,0,0,0); monday.setDate(now.getDate() - dow);
+    const start = monday.getTime();
+    return (st.readingLog || []).filter(r => r.userId === userId && r.date >= start)
+      .reduce((acc, r) => ({ minutes: acc.minutes + (r.minutes||0), pages: acc.pages + (r.pages||0) }), { minutes: 0, pages: 0 });
+  }
+
   /* ------------------------- Book clubs / groups ----------------------- */
   function createClub(name, description, adminId, st) {
     if (!name || !name.trim()) return { ok: false, msg: "Please give the club a name." };
@@ -919,7 +932,7 @@ const Store = (function () {
     CLASSES, studentsByClass,
     kioskLogin, changePassword, updateProfile, sessionExpired,
     demoUsernames, removeDemoAccounts,
-    logReading, readingForUser, readingSummary,
+    logReading, readingForUser, readingSummary, readingThisWeek,
     createClub, updateClub, deleteClub, joinClub, leaveClub, clubForUser,
     addClubPost, clubPosts,
     toggleClubRead, markClubSeen, unreadPosts,

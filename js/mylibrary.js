@@ -159,6 +159,20 @@
    $("#rl-entries").textContent = summary.entries;
    $("#rl-streak").textContent = summary.streak;
 
+   // Weekly reading goal (set by the teacher) + this week's progress.
+   const goal = st.settings || {};
+   const goalBox = $("#weekly-goal");
+   if (goalBox && (goal.readingGoalMinutes > 0 || goal.readingGoalPages > 0)) {
+     const week = S.readingThisWeek(user.id, st);
+     const parts = [];
+     if (goal.readingGoalMinutes > 0) parts.push(`${week.minutes} / ${goal.readingGoalMinutes} min`);
+     if (goal.readingGoalPages > 0) parts.push(`${week.pages} / ${goal.readingGoalPages} pages`);
+     const done = (goal.readingGoalMinutes > 0 && week.minutes >= goal.readingGoalMinutes) ||
+                  (goal.readingGoalPages > 0 && week.pages >= goal.readingGoalPages);
+     goalBox.style.display = "";
+     goalBox.innerHTML = `<span>${done ? "GOAL" : "WEEK"}</span><div><strong>This week:</strong> ${parts.join(" · ")} ${done ? "— goal reached, great job!" : ""}</div>`;
+   }
+
    const sel = $("#reading-book");
    if (sel) {
      sel.innerHTML = `<option value="">General / no book</option>` + st.books.map(b => `<option value="${b.id}">${esc(b.title)}</option>`).join("");

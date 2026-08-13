@@ -30,6 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
    <div class="author">${esc(b.author)}</div>
    <div class="meta" style="margin-top:6px">
    <span class="badge badge-${pop.tier}">${pop.label}</span>
+   ${b.lexile ? `<span class="badge" style="background:var(--blue-soft);color:var(--blue)">${esc(b.lexile)}</span>` : ""}
    ${availBadge(b.id)}
    </div>
    <a class="btn btn-soft btn-sm" style="margin-top:8px" href="catalog.html">View in catalog</a>
@@ -90,6 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
                ${S.starHTML(S.avgRating(fb))}
                <span class="small muted">${fb.ratingCount || 0} rating${fb.ratingCount === 1 ? "" : "s"}</span>
                <span class="badge badge-${pop.tier}">${pop.label}</span>
+               ${fb.lexile ? `<span class="badge" style="background:var(--blue-soft);color:var(--blue)">${esc(fb.lexile)}</span>` : ""}
                ${availBadge(fb.id)}
              </div>
              ${fb.desc ? `<p class="muted small">${esc(excerpt(fb.desc, 220))}</p>` : ""}

@@ -5,15 +5,15 @@
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
  <title>Admin · Our Classroom Library</title>
- <link rel="stylesheet" href="css/style.css?v=34">
- <script defer src="js/store.js?v=34"></script>
- <script defer src="js/app.js?v=34"></script>
-  <script defer src="js/a11y.js?v=34"></script>
- <script defer src="js/barcode.js?v=34"></script>
- <script defer src="js/covers.js?v=34"></script>
- <script defer src="js/scanner.js?v=34"></script>
- <script defer src="js/scan.js?v=34"></script>
- <script defer src="js/admin.js?v=34"></script>
+ <link rel="stylesheet" href="css/style.css?v=35">
+ <script defer src="js/store.js?v=35"></script>
+ <script defer src="js/app.js?v=35"></script>
+  <script defer src="js/a11y.js?v=35"></script>
+ <script defer src="js/barcode.js?v=35"></script>
+ <script defer src="js/covers.js?v=35"></script>
+ <script defer src="js/scanner.js?v=35"></script>
+ <script defer src="js/scan.js?v=35"></script>
+ <script defer src="js/admin.js?v=35"></script>
 </head>
 <body>
  <div id="scan-mode" hidden></div>
@@ -29,6 +29,7 @@
  <a data-page="how-to-check-out.html" href="how-to-check-out.html">How to Check Out</a>
  <a data-page="my-library.html" href="my-library.html">My Library</a>
         <a data-page="sitemap.html" href="sitemap.html">Site Map</a>
+        <a data-page="guide.html" href="guide.html">Guide</a>
  <a data-page="admin.html" href="admin.html">Admin</a>
  </nav>
  <div id="user-area"></div>
@@ -248,6 +249,15 @@
           <div class="field" style="margin-bottom:14px"><label>Room number</label>
             <input id="room-number" type="text" placeholder="e.g. 204" style="max-width:200px">
             <p class="muted small">Shown in the top bar and footer as "Room # Library".</p>
+          </div>
+          <div class="filters" style="align-items:flex-end">
+            <div class="field"><label>Weekly reading goal — minutes</label>
+              <input id="goal-minutes" type="number" min="0" placeholder="0 = off" style="max-width:120px">
+            </div>
+            <div class="field"><label>Weekly reading goal — pages</label>
+              <input id="goal-pages" type="number" min="0" placeholder="0 = off" style="max-width:120px">
+            </div>
+            <div class="field" style="align-self:center"><span class="muted small">Shown to students in My Library as a weekly goal.</span></div>
           </div>
           <div class="filters">
             <label class="field" style="flex-direction:row;align-items:center;gap:8px;font-weight:600">

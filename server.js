@@ -56,7 +56,8 @@ function defaultState() {
     settings: {
       maxLoansPerStudent: 4, maxHoldsPerStudent: 3, overdueGraceDays: 2,
       popularityWindowDays: 30, hideDemoAccounts: false, featuredBookId: "",
-      kioskEnabled: true,
+      kioskEnabled: true, demoMode: true, room: "204",
+      readingGoalMinutes: 0, readingGoalPages: 0, lastBackup: 0,
     },
   };
 }
