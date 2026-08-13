@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Automated backup of the Classroom Library data.
 #
-# Snapshots the real server data to a timestamped file and keeps the last N.
-# It backs up BOTH files needed to fully restore:
+# Snapshots the real server data to a timestamped file and keeps only the
+# newest backup (the previous one is pruned each run). It backs up BOTH files
+# needed to fully restore:
 #   - library-data.json        (books, students, loans, holds, settings, …)
 #   - library-secret.key       (encryption key required to decrypt student
 #                               passwords — without it a restore can't recover
@@ -19,7 +20,8 @@
 #
 # CONFIG (environment variables, all optional):
 #   LIBRARY_BACKUP_DIR       where snapshots go   (default: <repo>/backups)
-#   LIBRARY_BACKUP_KEEP      how many to keep      (default: 30)
+#   LIBRARY_BACKUP_KEEP      how many to keep      (default: 1 — only the
+#                             newest backup is kept)
 #   LIBRARY_BACKUP_EXTRA_DIR a second copy folder  (default: none)
 set -euo pipefail
 
@@ -29,7 +31,7 @@ DATA="$REPO/library-data.json"
 KEY="$REPO/library-secret.key"
 
 BACKUP_DIR="${LIBRARY_BACKUP_DIR:-$REPO/backups}"
-KEEP="${LIBRARY_BACKUP_KEEP:-30}"
+KEEP="${LIBRARY_BACKUP_KEEP:-1}"
 EXTRA_DIR="${LIBRARY_BACKUP_EXTRA_DIR:-}"
 
 LOG="$BACKUP_DIR/backup.log"
@@ -58,13 +60,20 @@ if [ -n "$EXTRA_DIR" ]; then
   [ -f "$KEYDEST" ] && cp "$KEYDEST" "$EXTRA_DIR/"
 fi
 
-# Prune: keep only the newest $KEEP backups.
+# Prune: keep only the newest $KEEP backups (json) and their matching keys.
 COUNT=$(ls -1 "$BACKUP_DIR"/library-backup-*.json 2>/dev/null | wc -l | tr -d ' ')
 if [ "$COUNT" -gt "$KEEP" ]; then
   ls -1t "$BACKUP_DIR"/library-backup-*.json 2>/dev/null | tail -n +$((KEEP + 1)) | while read -r f; do
     rm -f "$f"
   done
 fi
+# Remove any orphaned key snapshots whose matching json backup is gone.
+for k in "$BACKUP_DIR"/library-secret-*.key; do
+  [ -e "$k" ] || continue
+  stamp="${k##*library-secret-}"
+  stamp="${stamp%.key}"
+  [ -f "$BACKUP_DIR/library-backup-$stamp.json" ] || rm -f "$k"
+done
 
 echo "$(date '+%F %T') OK: $DEST" >> "$LOG"
 echo "Backup written to $DEST"
