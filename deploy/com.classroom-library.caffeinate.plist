@@ -2,10 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
   macOS launchd agent: keeps the Mac from idling to sleep so the Classroom
-  Library stays reachable during the day.
+  Library stays reachable, while still letting the screen turn itself off.
 
-  Flags:
-    -d  prevent the display from sleeping
+  Flags (no -d, so the display can sleep normally):
     -i  prevent idle system sleep
     -m  prevent the disk from sleeping
     -s  prevent system sleep when on power adapter
@@ -21,7 +20,7 @@
     <key>ProgramArguments</key>
     <array>
         <string>/usr/bin/caffeinate</string>
-        <string>-dims</string>
+        <string>-ims</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
