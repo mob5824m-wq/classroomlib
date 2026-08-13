@@ -402,6 +402,22 @@ html[data-theme="dark"] .hero { background: linear-gradient(135deg, #0a4d4d, #0a
   .bc-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
+/* --------------------- Password handout (printable) ------------------- */
+.handout-sheet { display: none; }
+.handout-heading { text-align: center; margin-bottom: 4px; }
+.handout-note { text-align: center; color: #666; margin: 0 0 14px; font-size: .85rem; }
+.handout-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.handout-slip { border: 1px dashed #999; border-radius: 8px; padding: 12px 14px; page-break-inside: avoid; }
+.handout-slip-name { font-weight: 800; font-size: 1rem; margin-bottom: 6px; }
+.handout-slip-user, .handout-slip-pw { font-size: .9rem; }
+.handout-slip-user code, .handout-slip-pw code { background: #f0f2f4; padding: 1px 5px; border-radius: 4px; }
+.handout-slip-class { font-size: .8rem; color: #666; margin-top: 4px; }
+@media print {
+  #handout-sheet, #handout-sheet * { visibility: visible; }
+  #handout-sheet { display: block; position: absolute; inset: 0; padding: 20px; }
+  .handout-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
 /* --------------------- Kiosk options (checkout/checkin) --------------- */
 .kiosk-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; max-width: 640px; margin: 0 auto; }
 .kiosk-option {

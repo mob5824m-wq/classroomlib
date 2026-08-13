@@ -5,15 +5,15 @@
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
  <title>Admin · Our Classroom Library</title>
- <link rel="stylesheet" href="css/style.css?v=39">
- <script defer src="js/store.js?v=39"></script>
- <script defer src="js/app.js?v=39"></script>
-  <script defer src="js/a11y.js?v=39"></script>
- <script defer src="js/barcode.js?v=39"></script>
- <script defer src="js/covers.js?v=39"></script>
- <script defer src="js/scanner.js?v=39"></script>
- <script defer src="js/scan.js?v=39"></script>
- <script defer src="js/admin.js?v=39"></script>
+ <link rel="stylesheet" href="css/style.css?v=40">
+ <script defer src="js/store.js?v=40"></script>
+ <script defer src="js/app.js?v=40"></script>
+  <script defer src="js/a11y.js?v=40"></script>
+ <script defer src="js/barcode.js?v=40"></script>
+ <script defer src="js/covers.js?v=40"></script>
+ <script defer src="js/scanner.js?v=40"></script>
+ <script defer src="js/scan.js?v=40"></script>
+ <script defer src="js/admin.js?v=40"></script>
 </head>
 <body>
  <div id="scan-mode" hidden></div>
@@ -137,8 +137,10 @@
  <div style="display:flex;gap:8px">
  <button class="btn btn-amber" data-bulk-users> Bulk add</button>
  <button class="btn btn-primary" data-add-user>+ Add student</button>
+ <button class="btn btn-outline" data-reset-passwords>Reset to unique passwords</button>
  </div>
  </div>
+ <p class="small muted">Reset gives every student a brand-new unique password and prints a cut-apart handout. Hand these out so each student signs in with their own.</p>
  <div class="table-wrap">
  <table>
  <thead><tr><th>Name</th><th>Username</th><th>Password</th><th>Grade</th><th>Class</th><th>Role</th><th>Out</th><th>Actions</th></tr></thead>

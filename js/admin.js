@@ -967,6 +967,59 @@
  return out;
  }
 
+ /* ---------------------- password handout (printable) ------------------- */
+ // Renders a print-only sheet of name/username/password slips and opens the
+ // browser's print dialog. rows = [{ name, username, password, class }].
+ function printHandout(rows, title) {
+   let sheet = document.getElementById("handout-sheet");
+   if (!sheet) {
+     sheet = document.createElement("div");
+     sheet.id = "handout-sheet";
+     sheet.className = "handout-sheet";
+     document.body.appendChild(sheet);
+   }
+   sheet.innerHTML = "";
+   const h = document.createElement("h2");
+   h.className = "handout-heading";
+   h.textContent = title || "Room 204 Library — Student logins";
+   sheet.appendChild(h);
+   const note = document.createElement("p");
+   note.className = "handout-note";
+   note.textContent = "Cut along the lines. Hand each student their slip to sign in at the library.";
+   sheet.appendChild(note);
+   const grid = document.createElement("div");
+   grid.className = "handout-grid";
+   rows.forEach(r => {
+     const slip = document.createElement("div");
+     slip.className = "handout-slip";
+     slip.innerHTML = `
+       <div class="handout-slip-name">${esc(r.name)}</div>
+       <div class="handout-slip-user">Username: <strong>${esc(r.username)}</strong></div>
+       <div class="handout-slip-pw">Password: <strong>${esc(r.password)}</strong></div>
+       ${r.class ? `<div class="handout-slip-class">Class ${esc(r.class)}</div>` : ""}`;
+     grid.appendChild(slip);
+   });
+   sheet.appendChild(grid);
+   window.print();
+ }
+
+ // Give every student a brand-new unique password and print a handout.
+ function resetPasswords() {
+   const st = S.getState();
+   const students = st.users.filter(u => u.role === "student");
+   if (!students.length) { toast("No students to reset.", "error"); return; }
+   if (!confirm("Give every student a brand-new unique password? Their current passwords will be replaced. You'll get a printable handout to cut apart.")) return;
+   const rows = students.map(u => {
+     const pw = genPassword();
+     u.password = pw; // the server encrypts it at rest on save
+     return { name: u.name, username: u.username, password: pw, class: u.class || "" };
+   });
+   S.save(st);
+   toast(`Updated ${rows.length} student password${rows.length === 1 ? "" : "s"}.`, "success");
+   render();
+   printHandout(rows, "Room " + ((st.settings && st.settings.room) || "204") + " Library — Student logins");
+ }
+
  /* ---------------------------- bulk add ------------------------------- */
  function bulkForm() {
  const body = $("#bulk-modal-body");
@@ -982,6 +1035,9 @@
  <div class="filters">
  <div class="field" style="flex:1"><label>Default password</label><input id="bulk-password" value="read123"></div>
  </div>
+ <label class="field" style="flex-direction:row;align-items:center;gap:8px;font-weight:600">
+ <input type="checkbox" id="bulk-unique" checked> Give each student a unique password (recommended)
+ </label>
  <button class="btn btn-primary btn-block" id="bulk-go">Create accounts</button>
  <div id="bulk-result"></div>`;
  openModal($("#bulk-modal"));
@@ -990,6 +1046,7 @@
  const st = S.getState();
  const lines = $("#bulk-text").value.split("\n").map(s => s.trim()).filter(Boolean);
  const defaultPw = $("#bulk-password").value.trim() || "read123";
+ const unique = $("#bulk-unique").checked;
  const created = [];
  let dupes = 0;
  lines.forEach(line => {
@@ -998,20 +1055,25 @@
  const klass = (parts[1] && S.CLASSES.includes(parts[1])) ? parts[1] : "7A";
  if (!name) return;
  const username = uniqueUsername(st, name);
- const password = genPassword();
+ const password = unique ? genPassword() : defaultPw;
  st.users.push({ id: S.uid(), name, username, password, role: "student", grade: "", class: klass });
  created.push({ name, username, password, class: klass });
  });
  S.save(st);
  $("#bulk-result").innerHTML = `
- <div class="callout" style="margin-top:12px"><span></span><div><strong>${created.length} account${created.length === 1 ? "": "s"} created!</strong> Share these usernames &amp; passwords with your students:</div></div>
+ <div class="callout" style="margin-top:12px"><span></span><div><strong>${created.length} account${created.length === 1 ? "" : "s"} created!</strong> Share these usernames &amp; passwords with your students:</div></div>
  <div class="table-wrap" style="margin-top:10px">
  <table>
  <thead><tr><th>Name</th><th>Username</th><th>Password</th><th>Class</th></tr></thead>
  <tbody>${created.map(c => `<tr><td>${esc(c.name)}</td><td>${esc(c.username)}</td><td>${esc(c.password)}</td><td>${esc(c.class)}</td></tr>`).join("")}</tbody>
  </table>
  </div>
- <button class="btn btn-soft btn-block" style="margin-top:10px" data-x-2>Done</button>`;
+ <div class="filters" style="margin-top:10px">
+ <button class="btn btn-soft btn-block" data-print-handout>Print handout</button>
+ <button class="btn btn-outline btn-block" data-x-2>Done</button>
+ </div>`;
+ const printBtn = body.querySelector("[data-print-handout]");
+ if (printBtn) printBtn.addEventListener("click", () => printHandout(created, "Room " + ((st.settings && st.settings.room) || "204") + " Library — New student logins"));
  body.querySelector("[data-x-2]").addEventListener("click", () => { closeModal($("#bulk-modal")); render(); });
  render();
  });
@@ -1239,6 +1301,9 @@
     bindReminders();
     render();
  window.onAuthChange = render;
+ // Give every student a unique password + print a handout (Students tab).
+ const rp = document.querySelector("[data-reset-passwords]");
+ if (rp) rp.addEventListener("click", resetPasswords);
  // Pull real descriptions from Open Library for any book missing one.
  if (window.Covers && typeof Covers.autoEnrichAll === "function") {
  Covers.autoEnrichAll().then(render);

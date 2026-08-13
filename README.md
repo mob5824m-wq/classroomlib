@@ -278,14 +278,19 @@ Everything lives in the **Students** tab of the Admin Dashboard (the tab labeled
    **Add student**. The Class field is only shown for students — **admin**
    accounts don't get a class.
 4. **Add many at once** — click **Bulk add**. Paste one name per line
-   (optionally `Name | Class`, e.g. `Ava Jones | 8B`), set a default password,
-   and it creates every account instantly, showing a printable table of
-   usernames & passwords.
-5. **Edit** — click **Edit** on a student's row to change their name, grade, class,
+   (optionally `Name | Class`, e.g. `Ava Jones | 8B`). It creates every account
+   instantly. By default each student gets their **own unique password** (a
+   checkbox lets you give everyone the same default instead), and you can
+   **Print handout** for cut-apart slips of name / username / password.
+5. **Give everyone a unique password** — click **Reset to unique passwords**.
+   Every student gets a brand-new random password and a printable handout
+   appears, so each student signs in with their own (great for the start of the
+   year). Hand out the slips and print new ones anytime.
+6. **Edit** — click **Edit** on a student's row to change their name, grade, class,
    role, or password (leave the password blank to keep the current one).
-6. **View a password** — student/kiosk passwords are encrypted; click the
+7. **View a password** — student/kiosk passwords are encrypted; click the
    **View** button to have the server reveal one (admin-only, on request).
-7. **Delete** — click **Delete** on a student's row (this also removes their loans
+8. **Delete** — click **Delete** on a student's row (this also removes their loans
    and holds).
 
 Students log in with their username/password on any page via **Sign in**.
