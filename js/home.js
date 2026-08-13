@@ -101,6 +101,33 @@ document.addEventListener("DOMContentLoaded", () => {
      }
    }
 
+   // "Just right for you" — filter books by reading level (feature #4)
+   const levels = [...new Set(st.books.map(b => (b.lexile||"").trim()).filter(Boolean))].sort();
+   const jrWrap = $("#just-right-wrap");
+   const jrSel = $("#level-select");
+   const jrBox = $("#just-right");
+   function renderJustRight() {
+     const chosen = jrSel.value;
+     const list = chosen ? st.books.filter(b => (b.lexile||"").trim() === chosen) : st.books.filter(b => (b.lexile||"").trim());
+     jrBox.innerHTML = list.length ? list.slice(0, 8).map(b => {
+       const pop = S.popularityInfo(b, st.books);
+       return `<div class="book-card"><div class="body">
+         ${bookCover(b, "sm")}
+         <h3>${esc(b.title)}</h3>
+         <div class="author">${esc(b.author)}</div>
+         <div class="meta"><span class="badge" style="background:var(--blue-soft);color:var(--blue)">${esc(b.lexile)}</span>
+         ${availBadge(b.id)}</div>
+         <button class="btn btn-outline btn-sm" onclick="location.href='catalog.html'">View in catalog</button>
+       </div></div>`;
+     }).join("") : `<p class="muted">No books tagged with a reading level yet.</p>`;
+   }
+   if (levels.length && jrWrap && jrSel) {
+     jrWrap.style.display = "";
+     jrSel.innerHTML = `<option value="">All levels</option>` + levels.map(l => `<option value="${l}">${l}</option>`).join("");
+     jrSel.addEventListener("change", renderJustRight);
+     renderJustRight();
+   }
+
    // Announcements (admin-editable)
    const anns = S.getAnnouncements(st);
    $("#announcements-list").innerHTML = anns.length

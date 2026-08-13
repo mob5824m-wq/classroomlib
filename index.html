@@ -9,12 +9,12 @@
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon.svg">
  <title>Home · Our Classroom Library</title>
- <link rel="stylesheet" href="css/style.css?v=37">
- <script defer src="js/store.js?v=37"></script>
- <script defer src="js/app.js?v=37"></script>
-  <script defer src="js/a11y.js?v=37"></script>
- <script defer src="js/covers.js?v=37"></script>
- <script defer src="js/home.js?v=37"></script>
+ <link rel="stylesheet" href="css/style.css?v=38">
+ <script defer src="js/store.js?v=38"></script>
+ <script defer src="js/app.js?v=38"></script>
+  <script defer src="js/a11y.js?v=38"></script>
+ <script defer src="js/covers.js?v=38"></script>
+ <script defer src="js/home.js?v=38"></script>
 </head>
 <body>
  <header class="topbar">
@@ -102,6 +102,14 @@
  <section class="card">
  <div class="card-head"><h2>Recent reviews</h2></div>
  <div id="recent-reviews"></div>
+ </section>
+
+ <section class="card" id="just-right-wrap" style="display:none">
+ <div class="card-head"><h2>Just right for you</h2>
+   <select id="level-select" class="seg-btn" style="border:1px solid var(--line);border-radius:8px;padding:6px 10px"></select>
+ </div>
+ <p class="muted small">Pick your reading level to see books that are a good fit.</p>
+ <div id="just-right" class="book-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))"></div>
  </section>
  </main>
 

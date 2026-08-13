@@ -718,7 +718,12 @@
  <span class="small muted" id="price-status"></span>
  </div>
  <div class="field"><label>Popularity (checkouts)</label><input name="checkoutCount" type="number" min="0" value="${b ? b.checkoutCount: 0}"></div>
- <div class="field"><label>Reading level (Lexile)</label><input name="lexile" type="text" value="${esc(b ? (b.lexile || ""): "")}" placeholder="e.g. 740L or 7th"></div>
+ <div class="field"><label>Reading level</label>
+ <div style="display:flex;gap:6px;align-items:center">
+ <input name="lexile" type="text" value="${esc(b ? (b.lexile || ""): "")}" placeholder="e.g. 740L or Middle grades" style="flex:1;min-width:120px">
+ <button type="button" class="btn btn-soft btn-sm" id="fetch-level" title="Try to guess a reading level from the ISBN">Auto</button>
+ </div>
+ </div>
  </div>
  <label>Short description <textarea name="desc" rows="2" placeholder="Why readers will love this book…">${esc(b ? b.desc: (p.desc || ""))}</textarea></label>
  <button class="btn btn-primary btn-block" type="submit">${b ? "Save changes": "Add book"}</button>
@@ -749,6 +754,21 @@
    const digits = isbnInput.value.replace(/[^0-9]/g, "");
    if (digits.length === 13 && !priceInput.value) doFetchPrice();
  });
+ // Auto-fill a reading level from the ISBN (best-effort).
+ const lexileInput = body.querySelector('[name="lexile"]');
+ const fetchLevelBtn = body.querySelector("#fetch-level");
+ async function doFetchLevel() {
+   const isbn = isbnInput.value.replace(/[^0-9]/g, "");
+   if (isbn.length !== 13) { toast("Enter a valid 13-digit ISBN first.", "error"); return; }
+   const level = await Covers.fetchLexileByISBN(isbn);
+   if (level) {
+     if (!lexileInput.value) { lexileInput.value = level; toast("Reading level set.", "success"); }
+     else toast("Level already set — clear it if you want to auto-fill.", "info");
+   } else {
+     toast("Couldn't guess a level for that ISBN — set it manually.", "info");
+   }
+ }
+ if (fetchLevelBtn) fetchLevelBtn.addEventListener("click", (e) => { e.preventDefault(); doFetchLevel(); });
  $("#book-form").addEventListener("submit", e => {
  e.preventDefault();
  const f = e.target;

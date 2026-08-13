@@ -145,6 +145,19 @@
     toast(`You're signed in as ${user.name} `, "success");
     renderUserNav();
     if (typeof window.onAuthChange === "function") window.onAuthChange(user);
+    // Friendly confirmation: if the student has overdue books, mention them.
+    if (user.role === "student") {
+      try {
+        const st = S.getState();
+        const overdue = st.loans.filter(l => l.userId === user.id && !l.returned && S.isOverdue(l, st));
+        if (overdue.length) {
+          const first = st.books.find(b => b.id === overdue[0].bookId);
+          setTimeout(() => {
+            toast(`Heads up — you have ${overdue.length} overdue book${overdue.length === 1 ? "" : "s"}${first ? " (" + first.title + ")" : ""}. Please return it soon!`, "info");
+          }, 800);
+        }
+      } catch (e) {}
+    }
   }
 
   // #1: force a password change for accounts flagged (default admin).

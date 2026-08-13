@@ -120,7 +120,30 @@ const Covers = (function () {
     } catch (e) { return null; }
   }
 
-  return { coverUrl, coverUrlLarge, fetchDetails, enrichDescription, autoEnrichAll, cleanIsbn, fetchPriceByISBN };
+  // Best-effort reading-level lookup by ISBN. There's no free, reliable Lexile
+  // API, so we return a guess based on Google Books audience/category metadata
+  // when available, and null otherwise (the teacher can set it manually).
+  async function fetchLexileByISBN(isbn) {
+    const c = cleanIsbn(isbn);
+    if (!c) return null;
+    try {
+      const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${c}`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      const item = data && data.items && data.items[0];
+      if (!item) return null;
+      const vi = item.volumeInfo || {};
+      const audience = (vi.audience || "").toLowerCase();
+      const cats = (vi.categories || []).join(" ").toLowerCase();
+      // Heuristic: audience/targetAge -> a broad reading band.
+      if (audience.includes("children") || audience.includes("juvenile") || /age.*(9|10|11|12)/.test(audience)) return "Middle grades";
+      if (audience.includes("young adult") || /age.*(13|14|15)/.test(audience)) return "Young adult";
+      if (cats.includes("juvenile")) return "Middle grades";
+      return null;
+    } catch (e) { return null; }
+  }
+
+  return { coverUrl, coverUrlLarge, fetchDetails, enrichDescription, autoEnrichAll, cleanIsbn, fetchPriceByISBN, fetchLexileByISBN };
 })();
 
 // Browser global
