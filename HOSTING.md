@@ -171,6 +171,20 @@ automatically and keeps your DDNS hostname covered.
 
 Keep the server running so students can use it whenever they're at school.
 
+### macOS (MacBook)
+Run `bash deploy/setup-mac.sh` once — it installs Node + Caddy (via Homebrew,
+if needed), fills in the paths, and loads three **launchd agents** that start
+on login and stay running:
+
+| Agent | Runs |
+|-------|------|
+| `com.classroom-library.server` | `node server.js` (port 8080) |
+| `com.classroom-library.duckdns` | DuckDNS IP updater every 5 min |
+| `com.classroom-library.caddy` | Caddy free HTTPS (443/8443) |
+
+Logs: `/tmp/classroom-library.log`, `/tmp/classroom-library-duckdns.log`,
+`/tmp/classroom-library-caddy.log`. The plist templates live in `deploy/`.
+
 ### Windows
 1. Edit `deploy/start_library.bat` to point `cd /d` at where you cloned the repo.
 2. Press `Win + R`, type `shell:startup`, press Enter, and put a shortcut to
@@ -188,9 +202,6 @@ sudo systemctl enable --now classroom-library
 ```
 Check status / logs with `systemctl status classroom-library` and
 `journalctl -u classroom-library -f`.
-
-### macOS
-Use `launchd`, or simply add the `node server.js` command to Login Items.
 
 ---
 
@@ -229,6 +240,7 @@ For camera scanning you'll use the public HTTPS URL (Option A or B).
 | Pick a port | `PORT=9090 node server.js` |
 | Easiest public HTTPS | Cloudflare Tunnel (Option A) |
 | Own hostname + HTTPS | DuckDNS + Caddy (Option B) |
+| Auto-start (macOS) | `bash deploy/setup-mac.sh` (launchd agents) |
 | Auto-start (Linux) | systemd unit (above) |
 | Auto-start (Windows) | Startup folder `.bat` / NSSM |
 | Admin login | `admin` / `admin123` |

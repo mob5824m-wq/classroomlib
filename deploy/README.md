@@ -13,6 +13,10 @@ You do not need any of it to run the site locally.
 | `duckdns-update.bat` | Same auto-update, as a Windows scheduled task. Edit the domain/token inside. | Windows |
 | `classroom-library.service` | Runs `node server.js` automatically and restarts it on crash/reboot. | Linux (systemd) |
 | `start_library.bat` | Starts the server on Windows. Put a shortcut in the Startup folder. | Windows |
+| `com.classroom-library.server.plist` | LaunchAgent: auto-starts `node server.js` and keeps it running. | macOS (launchd) |
+| `com.classroom-library.duckdns.plist` | LaunchAgent: updates your DuckDNS IP every 5 minutes. | macOS (launchd) |
+| `com.classroom-library.caddy.plist` | LaunchAgent: runs Caddy (free HTTPS) automatically. | macOS (launchd) |
+| `setup-mac.sh` | One command: checks/installs node + caddy, installs and loads the three macOS agents. | macOS |
 | `../Caddyfile.example` | The only config Caddy needs — free HTTPS, routes to the app on port 8080. | All |
 
 ## The 30-second mental model
@@ -29,7 +33,36 @@ Students at school
    node server.js  (0.0.0.0:8080, shared data + sessions)
 ```
 
-## Quick start
+## Quick start — macOS (Apple Silicon or Intel)
+
+If you're hosting on a **MacBook**, this is the whole setup:
+
+```bash
+# 1. From inside the repo folder, install Homebrew if you don't have it:
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# 2. Create your DuckDNS hostname + token at https://www.duckdns.org, then:
+cp deploy/duckdns.conf.example deploy/duckdns.conf   # edit in your domain + token
+cp Caddyfile.example Caddyfile                        # put your real hostname in it
+
+# 3. One command — installs node + caddy, configures Caddyfile, and loads the
+#    three launchd agents (server, DuckDNS updater, Caddy HTTPS):
+bash deploy/setup-mac.sh
+```
+
+Then **one time on your router**: reserve a static LAN IP for the MacBook and
+forward **external 443 → that MacBook → 443** (or → 8443 if you use the `:8443`
+alternative in `Caddyfile.example`). Everything auto-starts on login and stays
+running.
+
+Logs (if something isn't working):
+```bash
+tail -f /tmp/classroom-library.log          # node server
+cat  /tmp/classroom-library-duckdns.log     # DuckDNS updater
+tail -f /tmp/classroom-library-caddy.log    # Caddy
+```
+
+## Quick start — Linux / Windows
 
 1. **DuckDNS hostname** — create one at https://www.duckdns.org, note the token.
 2. **DuckDNS auto-update** — Linux: `cp duckdns.conf.example duckdns.conf`, fill

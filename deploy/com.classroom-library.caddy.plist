@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  macOS launchd agent: runs Caddy with the repo's Caddyfile so free HTTPS is
+  always on. Before enabling, rename Caddyfile.example -> Caddyfile and put
+  your real DuckDNS hostname in it.
+
+  SETUP: run deploy/setup-mac.sh — it fills in __REPO__/__CADDY__ for you and
+  installs this into ~/Library/LaunchAgents/.
+
+  Logs: /tmp/classroom-library-caddy.log
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.classroom-library.caddy</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>__CADDY__</string>
+        <string>run</string>
+        <string>--config</string>
+        <string>__REPO__/Caddyfile</string>
+        <string>--adapter</string>
+        <string>caddyfile</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>__REPO__</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/tmp/classroom-library-caddy.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/classroom-library-caddy.err.log</string>
+</dict>
+</plist>
