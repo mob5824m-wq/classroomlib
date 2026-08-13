@@ -80,27 +80,26 @@ your home IP changes.
    DuckDNS dashboard — you'll need it for automatic updates.
 
 2. **Install the DuckDNS update client** so your hostname always points to your
-   current home IP:
-   - **Windows:** download the DuckDNS updater, put your token in its config,
-     and run it (or add it to Startup). Or use a scheduled task:
-     `https://www.duckdns.org/update?domains=myroomlibrary&token=YOURTOKEN&ip=`
-   - **Linux / Raspberry Pi:** the one-liner below (add it to `cron` so it runs
-     every 5 minutes).
-     ```bash
-     echo url="https://www.duckdns.org/update?domains=myroomlibrary&token=YOURTOKEN&ip=" | curl -k -o ~/duck.log -K -
+   current home IP. Ready-to-run files are in the `deploy/` folder:
+   - **Linux / Raspberry Pi:** `cp deploy/duckdns.conf.example deploy/duckdns.conf`,
+     fill in your domain + token, test with `./deploy/duckdns-update.sh`, then add
+     this to `crontab -e` (adjust the path):
      ```
-     Add to `crontab -e`:
+     */5 * * * * /home/pi/classroomlib/deploy/duckdns-update.sh >>/home/pi/duckdns.log 2>&1
      ```
-     */5 * * * * echo url="https://www.duckdns.org/update?domains=myroomlibrary&token=YOURTOKEN&ip=" | curl -k -o ~/duck.log -K -
-     ```
+   - **Windows:** edit `deploy/duckdns-update.bat` with your domain + token, run
+     it once, then create a scheduled task (instructions inside the file). Or
+     download the official DuckDNS updater and add it to Startup.
    - **Router-based:** many routers (ASUS, TP-Link, etc.) support DuckDNS
      directly in their DDNS settings — easiest option, no extra software.
 
 3. **Give your computer a static LAN IP** (so port-forwarding never breaks):
    in your router, reserve `192.168.1.50` for your computer's MAC address.
 
-4. **Open a port on your router** — forward **external 443 → 192.168.1.50:8443**
-   (Caddy will serve HTTPS on 8443). If your ISP uses carrier-grade NAT you
+4. **Open a port on your router** — forward **external 443 → 192.168.1.50:443**
+   (Caddy listens on the standard HTTPS port). If port 443 is already used on
+   that computer, use the `:8443` alternative in `Caddyfile.example` and forward
+   external 443 → internal 8443 instead. If your ISP uses carrier-grade NAT you
    won't be able to forward ports — switch to the Cloudflare Tunnel option.
 
 5. **Run Caddy to get free HTTPS** (needed for camera barcode scanning):
@@ -108,13 +107,31 @@ your home IP changes.
    - Rename the included `Caddyfile.example` to `Caddyfile` and put your
      DuckDNS hostname in it (e.g. `myroomlibrary.duckdns.org`).
    - Run `caddy run`. Caddy auto-fetches and renews your Let's Encrypt
-     certificate. (It routes HTTPS to the app on port `8080`.)
+     certificate and routes HTTPS to the app on port `8080`.
 
 6. **Start the app** (`node server.js`) and confirm it prints
-   `Listening on: 0.0.0.0:8080`.
+   `Listening on: 0.0.0.0:8080`. To keep it running automatically, use
+   `deploy/classroom-library.service` (Linux/systemd) or
+   `deploy/start_library.bat` (Windows) — see below.
 
 7. **Test from outside your home** — on a phone's data (not your Wi-Fi), open
    `https://myroomlibrary.duckdns.org`. If it loads, you're live.
+
+### Port model (the app always listens on 0.0.0.0:8080)
+
+```
+Students at school
+   |  https://myroomlibrary.duckdns.org
+   v
+ Caddy (443)   <- router forwards external 443 here (or 8443 alternative)
+   |  reverse_proxy localhost:8080
+   v
+ node server.js (0.0.0.0:8080)
+```
+
+- **Primary:** Caddy binds `443`, router forwards `443 → computer:443`.
+- **Alternative (443 busy):** use the `:8443` block in `Caddyfile.example`,
+  Caddy binds `8443`, router forwards `443 → computer:8443`.
 
 ### 2. Find your home IP & set up port forwarding
 1. Find your computer's LAN IP:
@@ -123,8 +140,8 @@ your home IP changes.
 2. Log into your home router (usually `192.168.1.1` or `192.168.0.1`).
 3. Give your computer a **static/reserved LAN IP** so it never changes.
 4. Add a **port forward**:
- - External port `443` → Internal IP `<your-computer>` → Internal port `8443`
- - (See Method B2 below — you'll point a HTTPS reverse proxy at `8443`.)
+ - External port `443` → Internal IP `<your-computer>` → Internal port `443`
+   (or internal `8443` if you use the `:8443` alternative in `Caddyfile.example`).
  - If you're behind carrier-grade NAT you may not be able to forward ports —
  in that case use **Option A** instead.
 
@@ -133,10 +150,11 @@ Caddy is a small web server that fetches HTTPS certificates from **Let's Encrypt
 automatically and keeps your DDNS hostname covered.
 
 1. Install Caddy: https://caddyserver.com/download
-2. Create a `Caddyfile`:
+2. Rename `Caddyfile.example` to `Caddyfile` and put your real hostname in it
+   (it already points at the app on `localhost:8080`):
  ```
  myroomlibrary.duckdns.org {
- reverse_proxy localhost:8443
+ reverse_proxy localhost:8080
  }
  ```
 3. Run `caddy run` (keep it running). Caddy auto-renews the certificate.
@@ -154,37 +172,22 @@ automatically and keeps your DDNS hostname covered.
 Keep the server running so students can use it whenever they're at school.
 
 ### Windows
-1. Press `Win + R`, type `shell:startup`, press Enter.
-2. Create `start_library.bat` there:
- ```bat
- @echo off
- cd C:\path\to\classroomlib
- node server.js
- ```
- The server starts automatically when you log in. (For a true service, install
- [NSSM](https://nssm.cc) and run `node server.js` as a Windows service.)
+1. Edit `deploy/start_library.bat` to point `cd /d` at where you cloned the repo.
+2. Press `Win + R`, type `shell:startup`, press Enter, and put a shortcut to
+   `deploy/start_library.bat` there.
+   The server starts automatically when you log in. (For a true service, install
+   [NSSM](https://nssm.cc) and run `node server.js` as a Windows service.)
 
 ### Linux / Raspberry Pi (systemd)
+A ready-to-run unit is included at `deploy/classroom-library.service`. Edit the
+paths in it, then:
 ```bash
-sudo nano /etc/systemd/system/classroom-library.service
-```
-```ini
-[Unit]
-Description=Classroom Library
-After=network.target
-
-[Service]
-WorkingDirectory=/home/pi/classroomlib
-ExecStart=/usr/bin/node server.js
-Restart=always
-User=pi
-
-[Install]
-WantedBy=multi-user.target
-```
-```bash
+sudo cp deploy/classroom-library.service /etc/systemd/system/
+sudo systemctl daemon-reload
 sudo systemctl enable --now classroom-library
 ```
+Check status / logs with `systemctl status classroom-library` and
+`journalctl -u classroom-library -f`.
 
 ### macOS
 Use `launchd`, or simply add the `node server.js` command to Login Items.

@@ -36,15 +36,19 @@ Open **http://localhost:8080** and sign in with a demo account:
 
 1. **Pick a DuckDNS hostname** — at https://www.duckdns.org create one, e.g.
    `myroomlibrary.duckdns.org`, and save your **token**.
-2. **Auto-update DuckDNS** so it always points at your home IP (DuckDNS
-   updater on Windows, a cron line on Linux/Raspberry Pi, or your router's
-   DDNS setting). Full commands are in [HOSTING.md](HOSTING.md).
+2. **Auto-update DuckDNS** so it always points at your home IP. Ready-to-run
+   scripts are in the [`deploy/`](deploy/) folder (`duckdns-update.sh` for
+   Linux/Raspberry Pi, `duckdns-update.bat` for Windows), or use your router's
+   DDNS setting. Full commands are in [HOSTING.md](HOSTING.md).
 3. **Reserve a static LAN IP** for the computer in your router (e.g. `192.168.1.50`).
-4. **Open a port**: forward external `443` → that computer → `8443`.
+4. **Open a port**: forward external `443` → that computer → `443` (or → `8443`
+   if you use the alternative in `Caddyfile.example`).
 5. **Run Caddy for free HTTPS** (required for camera barcode scanning from
    school). Rename `Caddyfile.example` → `Caddyfile`, put in your DuckDNS
    hostname, then `caddy run`.
-6. **Start the app**: `node server.js` (listens on `0.0.0.0:8080`).
+6. **Start the app**: `node server.js` (listens on `0.0.0.0:8080`). To keep it
+   running automatically, use `deploy/classroom-library.service` (Linux) or
+   `deploy/start_library.bat` (Windows).
 7. **Test** on your phone's mobile data (not home Wi-Fi):
    `https://myroomlibrary.duckdns.org`.
 
@@ -316,6 +320,7 @@ classroomlib/
 │ └── home.js Home page logic
 ├── server.js Node backend (shared data, auth, sessions, encryption)
 ├── Caddyfile.example Free HTTPS (DuckDNS) config
+├── deploy/ DuckDNS updater, systemd service, Windows autostart
 ├── manifest.webmanifest + sw.js PWA (add to home screen, offline)
 ├── HOSTING.md Home hosting + dynamic DNS + HTTPS guide
 └── README.md You are here
