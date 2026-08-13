@@ -815,7 +815,7 @@
  }).join("") || `<tr><td colspan="8" class="muted">No accounts yet.</td></tr>`;
 
     // Reveal a student/kiosk password on request (server decrypts it).
-    box.querySelectorAll("[data-view-pw]").forEach(btn => btn.addEventListener("click", () => revealPassword(btn.dataset.viewPw, btn)));
+    $("#users-tbody").querySelectorAll("[data-view-pw]").forEach(btn => btn.addEventListener("click", () => revealPassword(btn.dataset.viewPw, btn)));
 
  $$("[data-edit-user]").forEach(x => x.addEventListener("click", () => userForm(x.dataset.editUser)));
  $$("[data-del-user]").forEach(x => x.addEventListener("click", () => deleteUser(x.dataset.delUser)));
@@ -1164,6 +1164,7 @@
    const importBtn = $("#import-data");
    const fileInput = $("#import-file");
    const msg = $("#backup-msg");
+   const st = S.getState();
    if (!exportBtn) return;
    exportBtn.addEventListener("click", () => {
      const st = S.getState();
