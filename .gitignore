@@ -3,3 +3,4 @@ library-data.json
 reminder-log.txt
 node_modules/
 library-secret.key
+library-sessions.json

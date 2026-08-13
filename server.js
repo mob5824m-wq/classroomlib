@@ -46,7 +46,29 @@ const MIME = {
 /* ----------------------------- persistence ----------------------------- */
 let state = null;
 let savePending = false;
-const sessions = new Map(); // token -> { userId, expires }
+const sessions = new Map(); // token -> { userId, lastActive, expires }
+const SESSIONS_FILE = path.join(ROOT, "library-sessions.json");
+let sessionsSavePending = false;
+
+// Load sessions from disk so users stay signed in across server restarts.
+function loadSessions() {
+  try {
+    const raw = fs.readFileSync(SESSIONS_FILE, "utf8");
+    const obj = JSON.parse(raw);
+    Object.keys(obj).forEach(token => sessions.set(token, obj[token]));
+  } catch (e) { /* no file yet */ }
+}
+// Debounced persist of the session map.
+function persistSessions() {
+  if (sessionsSavePending) return;
+  sessionsSavePending = true;
+  setTimeout(() => {
+    sessionsSavePending = false;
+    const obj = {};
+    sessions.forEach((v, k) => obj[k] = v);
+    try { fs.writeFileSync(SESSIONS_FILE, JSON.stringify(obj)); } catch (e) {}
+  }, 300);
+}
 
 function defaultState() {
   return {
@@ -205,11 +227,11 @@ function sessionUser(req) {
   if (!s) return null;
   const user = state.users.find(u => u.id === s.userId);
   // Absolute expiry.
-  if (s.expires < Date.now()) { sessions.delete(token); return null; }
+  if (s.expires < Date.now()) { sessions.delete(token); persistSessions(); return null; }
   // 6-hour inactivity timeout — but never for the kiosk account.
   if (user && user.role !== "kiosk") {
     const now = Date.now();
-    if (now - (s.lastActive || now) > SESSION_TTL) { sessions.delete(token); return null; }
+    if (now - (s.lastActive || now) > SESSION_TTL) { sessions.delete(token); persistSessions(); return null; }
     s.lastActive = now; // sliding
   }
   return user || null;
@@ -220,11 +242,13 @@ function newSession(userId, res) {
   // Kiosk sessions don't time out; everyone else gets the inactivity cap.
   const maxAge = (user && user.role === "kiosk") ? SESSION_ABS_MAX : SESSION_TTL;
   sessions.set(token, { userId, lastActive: Date.now(), expires: Date.now() + SESSION_ABS_MAX });
+  persistSessions();
   res.setHeader("Set-Cookie", `${COOKIE}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${Math.floor(maxAge / 1000)}`);
 }
 function clearSession(req, res) {
   const token = cookieFromReq(req);
   if (token) sessions.delete(token);
+  persistSessions();
   res.setHeader("Set-Cookie", `${COOKIE}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0`);
 }
 
@@ -386,6 +410,7 @@ const server = http.createServer((req, res) => {
 });
 
 loadData();
+loadSessions();
 server.listen(PORT, HOST, () => {
   const lan = lanIP();
   console.log("Classroom Library server running:");
