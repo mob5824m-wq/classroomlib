@@ -181,6 +181,7 @@ on login and stay running:
 | `com.classroom-library.server` | `node server.js` (port 8080) |
 | `com.classroom-library.duckdns` | DuckDNS IP updater every 5 min |
 | `com.classroom-library.caddy` | Caddy free HTTPS (443/8443) |
+| `com.classroom-library.caffeinate` | Keeps the Mac awake (`caffeinate -dims`) |
 
 Logs: `/tmp/classroom-library.log`, `/tmp/classroom-library-duckdns.log`,
 `/tmp/classroom-library-caddy.log`. The plist templates live in `deploy/`.
@@ -226,7 +227,9 @@ For camera scanning you'll use the public HTTPS URL (Option A or B).
  The `admin` account (`admin123`) can manage everything, so change it and don't
  print it for students.
 - **Keep the computer awake & powered.** Set power settings so the host doesn't
- sleep. For a tunnel (Option A), the machine must stay on and online.
+ sleep. On macOS, `setup-mac.sh` loads a `caffeinate -dims` agent that stops
+ idle sleep while the Mac is plugged in — keep it plugged in so it stays on.
+ For a tunnel (Option A), the machine must stay on and online.
 - **School network may block unknown domains.** If Option B's URL is blocked,
  try Option A (Cloudflare) or ask your school's IT to allow the domain.
 

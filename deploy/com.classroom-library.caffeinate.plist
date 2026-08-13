@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  macOS launchd agent: keeps the Mac from idling to sleep so the Classroom
+  Library stays reachable during the day.
+
+  Flags:
+    -d  prevent the display from sleeping
+    -i  prevent idle system sleep
+    -m  prevent the disk from sleeping
+    -s  prevent system sleep when on power adapter
+
+  KeepAlive restarts caffeinate if it ever exits, so the assertion stays on.
+
+  SETUP: run deploy/setup-mac.sh (installs + loads this automatically).
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.classroom-library.caffeinate</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/caffeinate</string>
+        <string>-dims</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+</dict>
+</plist>

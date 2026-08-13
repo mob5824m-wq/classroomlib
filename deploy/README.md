@@ -16,7 +16,8 @@ You do not need any of it to run the site locally.
 | `com.classroom-library.server.plist` | LaunchAgent: auto-starts `node server.js` and keeps it running. | macOS (launchd) |
 | `com.classroom-library.duckdns.plist` | LaunchAgent: updates your DuckDNS IP every 5 minutes. | macOS (launchd) |
 | `com.classroom-library.caddy.plist` | LaunchAgent: runs Caddy (free HTTPS) automatically. | macOS (launchd) |
-| `setup-mac.sh` | One command: checks/installs node + caddy, installs and loads the three macOS agents. | macOS |
+| `com.classroom-library.caffeinate.plist` | LaunchAgent: keeps the Mac awake (via `caffeinate -dims`) so it stays reachable. | macOS (launchd) |
+| `setup-mac.sh` | One command: checks/installs node + caddy, installs and loads the macOS agents. | macOS |
 | `../Caddyfile.example` | The only config Caddy needs — free HTTPS, routes to the app on port 8080. | All |
 
 ## The 30-second mental model

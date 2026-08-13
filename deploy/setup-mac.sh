@@ -4,11 +4,12 @@
 # What it does:
 #   1. Checks you have node + caddy (installs via Homebrew if missing).
 #   2. Checks your DuckDNS config and Caddyfile are set up.
-#   3. Installs three launchd agents that start everything automatically when
+#   3. Installs four launchd agents that start everything automatically when
 #      you log in and keep it running:
-#        - com.classroom-library.server   (node server.js, port 8080)
-#        - com.classroom-library.duckdns  (update your DuckDNS IP every 5 min)
-#        - com.classroom-library.caddy    (free HTTPS on 443/8443)
+#        - com.classroom-library.server      (node server.js, port 8080)
+#        - com.classroom-library.duckdns     (update your DuckDNS IP every 5 min)
+#        - com.classroom-library.caddy       (free HTTPS on 443/8443)
+#        - com.classroom-library.caffeinate  (keep the Mac awake while powered)
 #
 # Run it from the repo folder:
 #     bash deploy/setup-mac.sh
@@ -50,7 +51,7 @@ echo "caddy: $CADDY"
 # --- Install LaunchAgents --------------------------------------------------
 echo
 echo "Installing launchd agents into $LA ..."
-for name in server duckdns caddy; do
+for name in server duckdns caddy caffeinate; do
   src="$REPO/deploy/com.classroom-library.$name.plist"
   dst="$LA/com.classroom-library.$name.plist"
   sed -e "s|__REPO__|$REPO|g" \
@@ -62,7 +63,7 @@ done
 # --- Load them ------------------------------------------------------------
 echo
 echo "Loading agents (they will start now and on every login)..."
-for name in server duckdns caddy; do
+for name in server duckdns caddy caffeinate; do
   dst="$LA/com.classroom-library.$name.plist"
   if launchctl bootstrap gui/"$(id -u)" "$dst" 2>/dev/null; then
     echo "  loaded $name"
