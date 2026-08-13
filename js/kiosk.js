@@ -2,18 +2,13 @@
  * kiosk.js — self-service classroom checkout / check-in.
  *
  * The kiosk offers exactly two actions: Check Out and Check In.
- * Both operate under the shared "kiosk" account (no sign-in
- * needed). Check Out scans a book and checks it out to the
- * kiosk account; Check In scans a book and returns whichever
- * copy is currently checked out.
+ * No sign-in is needed. Check Out scans a book and then asks which
+ * student is taking it (a roster picker), recording the loan to that
+ * student; Check In scans a book and returns whichever copy is
+ * currently checked out.
  * ============================================================ */
 (function () {
   const S = Store;
-
-  function kioskAccount() {
-    const st = S.getState();
-    return st.users.find(u => u.username === "kiosk") || null;
-  }
 
   /* ----------------------- mode switching ----------------------- */
   function showOptions() {
@@ -52,25 +47,31 @@
       result.innerHTML = `<div class="callout" style="background:var(--red-soft);border-color:var(--red)"><span>!</span><div><strong>No book found for that barcode.</strong> Try again or ask your librarian.</div></div>`;
       return;
     }
-    const acct = kioskAccount();
-    if (!acct) { result.innerHTML = `<div class="callout"><span>!</span><div><strong>Kiosk account not found.</strong> See your librarian.</div></div>`; return; }
-    const st = S.getState();
-    const res = S.createLoan(book.id, acct.id, st);
-    if (res.ok) {
-      result.innerHTML = `
-        <div class="callout" style="background:var(--green-soft);border-color:var(--green)">
-          <span>OK</span>
-          <div>
-            <strong>Checked out!</strong><br>
-            "${esc(book.title)}" is checked out.<br>
-            Due back: <strong>${S.fmtDate(res.loan.dueDate)}</strong>.
-          </div>
-        </div>`;
-      document.getElementById("kiosk-barcode").value = "";
-      logKiosk("checkout", "kiosk", book.title);
-    } else {
-      result.innerHTML = `<div class="callout" style="background:var(--amber-soft);border-color:var(--amber)"><span>!</span><div>${esc(res.msg)}</div></div>`;
-    }
+    // Ask who is checking out the book (roster picker), so the loan is
+    // recorded to the real student instead of the generic kiosk account.
+    window.pickStudent({
+      title: "Who is checking out?",
+      sub: `Scan complete. Which student is taking "${book.title}"?`
+    }).then(student => {
+      if (!student) return; // cancelled — leave the kiosk on the scan step
+      const st = S.getState();
+      const res = S.createLoan(book.id, student.id, st);
+      if (res.ok) {
+        result.innerHTML = `
+          <div class="callout" style="background:var(--green-soft);border-color:var(--green)">
+            <span>OK</span>
+            <div>
+              <strong>Checked out to ${esc(student.name)}!</strong><br>
+              "${esc(book.title)}" is checked out.<br>
+              Due back: <strong>${S.fmtDate(res.loan.dueDate)}</strong>.
+            </div>
+          </div>`;
+        document.getElementById("kiosk-barcode").value = "";
+        logKiosk("checkout", student.name, book.title);
+      } else {
+        result.innerHTML = `<div class="callout" style="background:var(--amber-soft);border-color:var(--amber)"><span>!</span><div>${esc(res.msg)}</div></div>`;
+      }
+    });
   }
 
   /* ------------------------- check in ------------------------- */

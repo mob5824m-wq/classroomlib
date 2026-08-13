@@ -76,12 +76,18 @@ A **Site Map** link appears in the top nav of every page.
 ### Checkout Kiosk (no account needed)
 
 The kiosk offers exactly two options:
-- **Check Out** — scan (or type) the book's barcode to check it out.
+- **Check Out** — scan (or type) the book's barcode, then pick **which student**
+  is taking it from a searchable roster. The loan is recorded to that student.
 - **Check In** — scan (or type) the book's barcode to return it.
 
 It runs under a dedicated **kiosk** account (its own role, no class) so it
 never shows up in a class roster and never times out. The teacher can enable or
 disable the kiosk and review its activity log in **Admin → Kiosk**.
+
+If a student browses the **catalog** (or scan) page without signing in, tapping
+**Check out** asks who is taking the book and lets them either **sign in** to
+their own account or be **picked from the class roster** — so a loan is always
+tied to a real student, never a generic "kiosk" account.
 
 Each student has a **Class** (7A/7B/8A/8B). The admin sets a student's class in
 **Admin → Students** (Class dropdown in **Add/Edit**, or `Name | Class` in

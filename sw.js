@@ -6,7 +6,7 @@
  * with ?v=NN in the HTML, so a fresh page always pulls the current scripts.
  * Bumping CACHE below also clears any stale cached files.
  */
-const CACHE = "classroomlib-v3";
+const CACHE = "classroomlib-v4";
 const CORE = ["./", "./index.html", "./css/style.css", "./js/store.js", "./js/app.js", "./js/a11y.js", "./js/barcode.js", "./js/covers.js", "./js/home.js", "./js/admin.js", "./js/catalog.js", "./js/mylibrary.js", "./js/kiosk.js", "./js/scan.js", "./js/scanner.js", "./js/request.js", "./guide.html", "./sitemap.html", "./kiosk.html", "./my-library.html", "./admin.html", "./catalog.html", "./how-to-check-out.html"];
 
 self.addEventListener("install", (e) => {

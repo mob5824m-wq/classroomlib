@@ -211,6 +211,97 @@
     return modal;
   }
 
+ /* ---------------- roster picker (shared) ---------------- */
+ // Opens a searchable modal listing every student. Resolves with the chosen
+ // user, or null if the modal is dismissed. Used by the checkout kiosk and by
+ // the "who is checking out" flow on the catalog/scan when nobody is signed in.
+ window.pickStudent = function (opts) {
+   opts = opts || {};
+   return new Promise((resolve) => {
+     const st = S.getState();
+     const students = st.users
+       .filter(u => u.role === "student")
+       .sort((a, b) => a.name.localeCompare(b.name));
+
+     const modal = document.createElement("div");
+     modal.className = "modal";
+     modal.innerHTML = `
+       <div class="modal-card" style="max-width:480px">
+         <button class="modal-x" data-close>&times;</button>
+         <h2>${esc(opts.title || "Who is checking out?")}</h2>
+         <p class="muted small">${esc(opts.sub || "Pick a student from the class roster.")}</p>
+         <input id="roster-search" type="text" placeholder="Type to find a student..." autocomplete="off"
+           style="width:100%;box-sizing:border-box;margin-bottom:12px">
+         <div id="roster-list" class="roster" style="max-height:46vh;overflow:auto"></div>
+       </div>`;
+     document.body.appendChild(modal);
+     modal.classList.add("open");
+
+     const list = modal.querySelector("#roster-list");
+     const search = modal.querySelector("#roster-search");
+
+     function renderRoster(q) {
+       q = (q || "").trim().toLowerCase();
+       const rows = students.filter(s =>
+         !q || s.name.toLowerCase().includes(q) || (s.username || "").toLowerCase().includes(q));
+       if (!rows.length) {
+         list.innerHTML = `<p class="muted small" style="grid-column:1/-1">No students found for that name.</p>`;
+         return;
+       }
+       list.innerHTML = rows.map(s => `
+         <button type="button" class="roster-name" data-id="${s.id}">
+           <span>${esc(s.name)}</span>
+           ${s.class ? `<span class="badge" style="background:#eef1f3;color:var(--ink-soft)">${esc(s.class)}</span>` : ""}
+         </button>`).join("");
+       list.querySelectorAll("[data-id]").forEach(btn => btn.addEventListener("click", () => {
+         const u = students.find(x => x.id === btn.dataset.id);
+         modal.remove();
+         resolve(u);
+       }));
+     }
+
+     function close() { modal.remove(); resolve(null); }
+     modal.querySelector("[data-close]").addEventListener("click", close);
+     modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
+     search.addEventListener("input", () => renderRoster(search.value));
+
+     renderRoster("");
+     search.focus();
+   });
+ };
+
+ // Not-signed-in checkout: let the borrower either sign in to their own
+ // account or be picked from the class roster (e.g. when a student isn't
+ // signed in). Resolves to {method:"login"} | {method:"student", user} | null.
+ window.offerCheckoutIdentity = function (opts) {
+   opts = opts || {};
+   return new Promise((resolve) => {
+     const modal = document.createElement("div");
+     modal.className = "modal";
+     modal.innerHTML = `
+       <div class="modal-card">
+         <button class="modal-x" data-close>&times;</button>
+         <h2>Who is checking this out?</h2>
+         <p class="muted small">${esc(opts.sub || "Sign in to your account, or pick a student from the class roster.")}</p>
+         <button class="btn btn-primary btn-block" data-login>Sign in to my account</button>
+         <button class="btn btn-soft btn-block" data-roster>Pick a student from the roster</button>
+         <p class="muted small" style="text-align:center;margin-top:10px">Roster checkout is for when a student isn't signed in.</p>
+       </div>`;
+     document.body.appendChild(modal);
+     modal.classList.add("open");
+
+     function close(v) { modal.remove(); resolve(v || null); }
+     modal.querySelector("[data-close]").addEventListener("click", () => close(null));
+     modal.addEventListener("click", (e) => { if (e.target === modal) close(null); });
+     modal.querySelector("[data-login]").addEventListener("click", () => close({ method: "login" }));
+     modal.querySelector("[data-roster]").addEventListener("click", async () => {
+       const u = await window.pickStudent({ title: "Who is checking out?", sub: opts.rosterSub || "Select the student taking this book." });
+       if (u) close({ method: "student", user: u });
+       // if cancelled, keep the offer prompt open so they can sign in instead.
+     });
+   });
+ };
+
  function logout() {
  S.clearSession();
  toast("You've been signed out. See you soon! ");

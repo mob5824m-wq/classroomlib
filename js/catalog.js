@@ -44,7 +44,7 @@
  let action = "";
  if (!loggedIn) {
  action = noCopies
- ? `<button class="btn btn-amber btn-sm" onclick="openLogin()">Sign in to hold</button>`: `<button class="btn btn-primary btn-sm" onclick="openLogin()">Sign in to borrow</button>`;
+ ? `<button class="btn btn-amber btn-sm" onclick="openLogin()">Sign in to hold</button>`: `<button class="btn btn-primary btn-sm" data-checkout="${book.id}">Check out</button>`;
  } else if (can) {
  action = `<button class="btn btn-primary btn-sm" data-checkout="${book.id}">Check out</button>`;
  } else {
@@ -143,7 +143,7 @@
  let borrowBtn = "";
  if (!loggedIn) {
  borrowBtn = noCopies
- ? `<button class="btn btn-amber" onclick="openLogin()">Sign in to hold</button>`: `<button class="btn btn-primary" onclick="openLogin()">Sign in to check out</button>`;
+ ? `<button class="btn btn-amber" onclick="openLogin()">Sign in to hold</button>`: `<button class="btn btn-primary" data-checkout="${book.id}"> Check this out</button>`;
  } else if (can) {
  borrowBtn = `<button class="btn btn-primary" data-checkout="${book.id}"> Check this out</button>`;
  } else {
@@ -316,9 +316,21 @@
 
  function doCheckout(bookId) {
  const user = S.currentUser();
- if (!user) { openLogin(); return; }
+ if (!user) {
+   // Not signed in: let them either sign in or be picked from the roster.
+   window.offerCheckoutIdentity({ rosterSub: "Select the student taking this book." }).then(res => {
+     if (!res) return;
+     if (res.method === "login") { openLogin(); return; }
+     completeCheckout(bookId, res.user.id);
+   });
+   return;
+ }
+ completeCheckout(bookId, user.id);
+ }
+
+ function completeCheckout(bookId, userId) {
  const st = S.getState();
- const res = S.createLoan(bookId, user.id, st);
+ const res = S.createLoan(bookId, userId, st);
  if (res.ok) {
  toast(`Nice! "${st.books.find(b => b.id === bookId).title}" is yours until ${S.fmtDate(res.loan.dueDate)} `, "success");
  } else {

@@ -95,7 +95,7 @@ const ScanActions = (function () {
  } else if (user) {
  actionsHTML = studentActions(st, book, user);
  } else {
- actionsHTML = `<button class="btn btn-primary btn-block" onclick="openLogin()">Sign in to check out</button>`;
+ actionsHTML = `<button class="btn btn-primary btn-block" data-checkout="${book.id}">Check out</button>`;
  }
 
  body.innerHTML = `
@@ -217,7 +217,17 @@ const ScanActions = (function () {
  // Admin picking a student
  const sel = body.querySelector("#scan-student");
  if (user && user.role === "admin" && sel) userId = sel.value;
- if (!userId) { openLogin(); return; }
+ if (!userId) {
+   // Not signed in: let them either sign in or be picked from the roster.
+   window.offerCheckoutIdentity({ rosterSub: "Select the student taking this book." }).then(res => {
+     if (!res) return;
+     if (res.method === "login") { openLogin(); return; }
+     const r = S.createLoan(bookId, res.user.id, st);
+     toast(r.ok ? `Checked out! Due ${S.fmtDate(r.loan.dueDate)} ` : r.msg, r.ok ? "success" : "error");
+     reRender(m, bookId);
+   });
+   return;
+ }
  const res = S.createLoan(bookId, userId, st);
  if (res.ok) toast(`Checked out! Due ${S.fmtDate(res.loan.dueDate)} `, "success");
  else toast(res.msg, "error");
