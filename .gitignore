@@ -4,3 +4,5 @@ reminder-log.txt
 node_modules/
 library-secret.key
 library-sessions.json
+# Automated backup snapshots (deploy/backup.sh)
+backups/

@@ -17,6 +17,8 @@ You do not need any of it to run the site locally.
 | `com.classroom-library.duckdns.plist` | LaunchAgent: updates your DuckDNS IP every 5 minutes. | macOS (launchd) |
 | `com.classroom-library.caddy.plist` | LaunchAgent: runs Caddy (free HTTPS) automatically. | macOS (launchd) |
 | `com.classroom-library.caffeinate.plist` | LaunchAgent: keeps the system awake (`caffeinate -ims`) while letting the screen sleep. | macOS (launchd) |
+| `backup.sh` | Daily snapshot of the real data (`library-data.json` + the encryption key) to timestamped files; keeps the last 30 and can copy to a USB drive/network share. | All |
+| `com.classroom-library.backup.plist` | LaunchAgent: runs `backup.sh` every day at 03:00. | macOS (launchd) |
 | `setup-mac.sh` | One command: checks/installs node + caddy, installs and loads the macOS agents. | macOS |
 | `../Caddyfile.example` | The only config Caddy needs — free HTTPS, routes to the app on port 8080. | All |
 
@@ -47,7 +49,8 @@ cp deploy/duckdns.conf.example deploy/duckdns.conf   # edit in your domain + tok
 cp Caddyfile.example Caddyfile                        # put your real hostname in it
 
 # 3. One command — installs node + caddy, configures Caddyfile, and loads the
-#    three launchd agents (server, DuckDNS updater, Caddy HTTPS):
+#    five launchd agents (server, DuckDNS updater, Caddy HTTPS, keep-awake,
+#    daily backup):
 bash deploy/setup-mac.sh
 ```
 
@@ -61,7 +64,28 @@ Logs (if something isn't working):
 tail -f /tmp/classroom-library.log          # node server
 cat  /tmp/classroom-library-duckdns.log     # DuckDNS updater
 tail -f /tmp/classroom-library-caddy.log    # Caddy
+cat  backups/backup.log                     # daily data backup
 ```
+
+## Backups (important)
+
+All your books, students, loans and holds live in `library-data.json` on the
+hosting computer. `setup-mac.sh` loads a **daily backup** agent that snapshots
+it (plus the encryption key needed to restore student passwords) at 03:00.
+
+- Snapshots go to `<repo>/backups/` as `library-backup-<date>.json`
+  (keeps the last 30 automatically).
+- **Copy them somewhere else too** — a USB drive, a network share, an iCloud
+  folder, or a second computer. Set it once in the backup agent by exporting
+  `LIBRARY_BACKUP_EXTRA_DIR=/Volumes/USB/library-backups` before running
+  `setup-mac.sh` (or run `deploy/backup.sh` manually with that env var).
+- To test: `bash deploy/backup.sh`, then check `backups/`.
+- To restore later, point the server at the snapshot (or use it as
+  `library-data.json`) and keep its matching `library-secret-*.key`.
+
+> Note: the in-browser **Download backup (JSON)** button in the Admin console
+> only captures what the browser can see (student passwords are hidden there),
+> so the server-side `backup.sh` snapshot is the reliable one for full restores.
 
 ## Quick start — Linux / Windows
 

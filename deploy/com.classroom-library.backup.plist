@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  macOS launchd agent: runs the automated backup every day at 03:00 (and once
+  when it's loaded). See deploy/backup.sh for what it copies and how to send a
+  second copy to a USB drive / network share.
+
+  SETUP: run deploy/setup-mac.sh — it fills in __REPO__ and loads this agent.
+
+  Log: /tmp/classroom-library-backup.log   (also see <repo>/backups/backup.log)
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.classroom-library.backup</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>__REPO__/deploy/backup.sh</string>
+    </array>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>3</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/tmp/classroom-library-backup.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/classroom-library-backup.err.log</string>
+</dict>
+</plist>

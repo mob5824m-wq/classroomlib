@@ -173,7 +173,7 @@ Keep the server running so students can use it whenever they're at school.
 
 ### macOS (MacBook)
 Run `bash deploy/setup-mac.sh` once — it installs Node + Caddy (via Homebrew,
-if needed), fills in the paths, and loads three **launchd agents** that start
+if needed), fills in the paths, and loads five **launchd agents** that start
 on login and stay running:
 
 | Agent | Runs |
@@ -182,6 +182,7 @@ on login and stay running:
 | `com.classroom-library.duckdns` | DuckDNS IP updater every 5 min |
 | `com.classroom-library.caddy` | Caddy free HTTPS (443/8443) |
 | `com.classroom-library.caffeinate` | Keeps the system awake (`caffeinate -ims`); screen can sleep |
+| `com.classroom-library.backup` | Daily snapshot of the data at 03:00 |
 
 Logs: `/tmp/classroom-library.log`, `/tmp/classroom-library-duckdns.log`,
 `/tmp/classroom-library-caddy.log`. The plist templates live in `deploy/`.
@@ -223,6 +224,10 @@ For camera scanning you'll use the public HTTPS URL (Option A or B).
  uses their own device and you need everyone to see the same books/loans, you'll
  need a real shared backend — `js/store.js` is the single file to swap out for
  that (see README → "Going to a real backend").
+- **Back up the data.** `setup-mac.sh` loads a daily backup agent that
+ snapshots `library-data.json` (+ the encryption key) to `backups/`. Copy those
+ snapshots somewhere else too (USB drive / network share) — see
+ [deploy/README.md](deploy/README.md).
 - **Protect the admin account.** Share only the student usernames/passwords.
  The `admin` account (`admin123`) can manage everything, so change it and don't
  print it for students.
