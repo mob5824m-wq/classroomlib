@@ -1,10 +1,14 @@
-# Room 204 Classroom Library
+# Classroom Library
 
 A friendly, fully-functional **Classroom Library website** for Grade 7–8 students, built with **HTML, CSS, and vanilla JavaScript** (no frameworks, no build step). It runs on a small Node server that keeps one **shared** library (books, loans, holds, reviews, requests, charges) so every device sees the same data.
 
 > The **room number** is configurable — see **Admin → Home Page settings**. It
 > appears in the top bar and footer as "Room # Library" on every page.
 
+> **Status:** this is the current `main` branch. The app ships with the Node
+> backend, the shared library store, the checkout kiosk, the full admin
+> console, the DuckDNS + Caddy + macOS hosting setup, and automated backups —
+> all merged and ready to use.
 ---
 
 ## Setup (three ways)
@@ -241,17 +245,29 @@ read**, a **due date**, and the students in the group. Students see
 set the **room number** (e.g. 204); the top bar and footer update to
 "Room <n> Library" on every page.
 
-**Passwords & security.**
-- Everyone can change their own password — students in **My Library**,
-  teachers in **Admin → My Account**.
-- **Admin passwords are hashed** (one-way, never recoverable).
-- **Student & kiosk passwords are encrypted** at rest with a server secret key
-  (`library-secret.key`, gitignored). They are **not** included in the shared
-  data; the teacher reveals one on demand via a **View** button in
-  **Admin → Students** (admin-only, server-side decryption).
-- **Auto sign-out after 6 hours of inactivity** for every account **except the
-  kiosk** (so the checkout station keeps working). Any interaction resets the
-  6-hour timer.
+**Security.** All of the protections below run **on the server**, so they can't
+be bypassed from the browser:
+- **Passwords.** Everyone can change their own password — students in
+  **My Library**, teachers in **Admin → My Account**. **Admin passwords are
+  hashed** (one-way, never recoverable). **Student & kiosk passwords are
+  encrypted** at rest with a server secret key (`library-secret.key`,
+  gitignored). They are **not** included in the shared data; the teacher
+  reveals one on demand via a **View** button in **Admin → Students**
+  (admin-only, server-side decryption).
+- **No data-wiping.** A signed-in student cannot wipe or rewrite the library.
+  Non-admin saves can only change *activity* records (their loans, holds,
+  reviews, reading log, clubs); the catalog (books) and the accounts (users)
+  are rebuilt from the server's current state, so a student can't delete books,
+  delete other accounts, change roles, or promote themself to admin.
+- **Admin-only reset.** `POST /api/reset` (the "Reset demo data" button) is
+  admin-only — anyone without an admin session gets a 403.
+- **Sensitive files never served.** The static file server refuses to serve
+  `library-data.json`, `library-secret.key`, `library-sessions.json`,
+  `reminder-log.txt`, `server.js`, and any dotfile / `node_modules` / `.git`
+  path, so the data and the encryption key can't be downloaded from the site.
+- **Sessions.** Uses secure `HttpOnly` cookies, with **auto sign-out after
+  6 hours of inactivity** for every account **except the kiosk** (so the
+  checkout station keeps working). Any interaction resets the 6-hour timer.
 
 **Kiosk is its own role.** The kiosk account has role `kiosk`, no class, is
 excluded from class rosters, and never auto-signs-out.

@@ -88,6 +88,22 @@ it (plus the encryption key needed to restore student passwords) at 03:00.
 > only captures what the browser can see (student passwords are hidden there),
 > so the server-side `backup.sh` snapshot is the reliable one for full restores.
 
+## Security (enforced server-side)
+
+- **Students can't wipe or rewrite the library.** Non-admin saves can only
+  change activity records (loans, holds, reviews, reading log, clubs). The
+  catalog (books) and the accounts (users) are rebuilt from the server's state,
+  so a student can't delete books/users, change roles, or promote themselves to
+  admin. Only the **admin** account can add/edit/delete books and accounts.
+- **Admin-only reset.** `POST /api/reset` is admin-only (403 otherwise).
+- **Sensitive files are never served.** The static server returns 403 for
+  `library-data.json`, `library-secret.key`, `library-sessions.json`,
+  `reminder-log.txt`, `server.js`, and any dotfile / `node_modules` / `.git`
+  path — so the data and the encryption key can't be downloaded by visitors.
+- **Back up the key too.** `backup.sh` snapshots `library-secret.key` alongside
+  `library-data.json`, because that key is required to decrypt student
+  passwords on a restore.
+
 ## Quick start — Linux / Windows
 
 1. **DuckDNS hostname** — create one at https://www.duckdns.org, note the token.

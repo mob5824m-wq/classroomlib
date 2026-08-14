@@ -217,17 +217,20 @@ For camera scanning you'll use the public HTTPS URL (Option A or B).
 ---
 
 ## Important notes
-
-- **Data is stored per browser (localStorage).** Each computer/browser that
- visits keeps its *own* copy of the library data. If your students always use
- the same classroom device(s) or one shared tablet, that's fine. If each student
- uses their own device and you need everyone to see the same books/loans, you'll
- need a real shared backend — `js/store.js` is the single file to swap out for
- that (see README → "Going to a real backend").
+- **Data is shared on the server.** The app runs on a real backend
+  (`node server.js`) that keeps one shared `library-data.json`, so books, loans
+  and accounts are the same on every device that connects — not per-browser.
+  (Each browser also mirrors a copy to `localStorage` as an offline fallback.)
 - **Back up the data.** `setup-mac.sh` loads a daily backup agent that
  snapshots `library-data.json` (+ the encryption key) to `backups/`. Copy those
  snapshots somewhere else too (USB drive / network share) — see
  [deploy/README.md](deploy/README.md).
+- **Security is enforced server-side.** Students can only change activity
+  records (their loans, holds, reviews, reading log, clubs) — they can't wipe
+  the catalog, change accounts, or promote themselves to admin. `POST /api/reset`
+  is admin-only, and sensitive files (`library-data.json`,
+  `library-secret.key`, `library-sessions.json`, `reminder-log.txt`, `server.js`)
+  are never served to visitors.
 - **Protect the admin account.** Share only the student usernames/passwords.
  The `admin` account (`admin123`) can manage everything, so change it and don't
  print it for students.
