@@ -17,7 +17,7 @@ You do not need any of it to run the site locally.
 | `com.classroom-library.duckdns.plist` | LaunchAgent: updates your DuckDNS IP every 5 minutes. | macOS (launchd) |
 | `com.classroom-library.caddy.plist` | LaunchAgent: runs Caddy (free HTTPS) automatically. | macOS (launchd) |
 | `com.classroom-library.caffeinate.plist` | LaunchAgent: keeps the system awake (`caffeinate -ims`) while letting the screen sleep. | macOS (launchd) |
-| `backup.sh` | Daily snapshot of the real data (`library-data.json` + the encryption key) to timestamped files; keeps only the newest backup and can copy to a USB drive/network share. | All |
+| `backup.sh` | Daily snapshot of the real data (`library-data.json` + the encryption key) to timestamped files; keeps a rolling week (default 7) and can copy to a USB drive/network share. | All |
 | `com.classroom-library.backup.plist` | LaunchAgent: runs `backup.sh` every day at 03:00. | macOS (launchd) |
 | `setup-mac.sh` | One command: checks/installs node + caddy, installs and loads the macOS agents. | macOS |
 | `../Caddyfile.example` | The only config Caddy needs — free HTTPS, routes to the app on port 8080. | All |
@@ -74,8 +74,8 @@ hosting computer. `setup-mac.sh` loads a **daily backup** agent that snapshots
 it (plus the encryption key needed to restore student passwords) at 03:00.
 
 - Snapshots go to `<repo>/backups/` as `library-backup-<date>.json`.
-  Only the **newest** backup is kept — each run replaces the previous one
-  (set `LIBRARY_BACKUP_KEEP` to keep more, if you ever want history).
+  A **rolling week** is kept (default 7; the oldest is pruned as new ones are
+  added). Set `LIBRARY_BACKUP_KEEP` to change how many to keep.
 - **Copy them somewhere else too** — a USB drive, a network share, an iCloud
   folder, or a second computer. Set it once in the backup agent by exporting
   `LIBRARY_BACKUP_EXTRA_DIR=/Volumes/USB/library-backups` before running

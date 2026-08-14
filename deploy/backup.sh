@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Automated backup of the Classroom Library data.
 #
-# Snapshots the real server data to a timestamped file and keeps only the
-# newest backup (the previous one is pruned each run). It backs up BOTH files
-# needed to fully restore:
+# Snapshots the real server data to a timestamped file and keeps a rolling
+# week of daily backups (the oldest is pruned once more than LIBRARY_BACKUP_KEEP
+# exist). It backs up BOTH files needed to fully restore:
 #   - library-data.json        (books, students, loans, holds, settings, …)
 #   - library-secret.key       (encryption key required to decrypt student
 #                               passwords — without it a restore can't recover
@@ -20,8 +20,8 @@
 #
 # CONFIG (environment variables, all optional):
 #   LIBRARY_BACKUP_DIR       where snapshots go   (default: <repo>/backups)
-#   LIBRARY_BACKUP_KEEP      how many to keep      (default: 1 — only the
-#                             newest backup is kept)
+#   LIBRARY_BACKUP_KEEP      how many to keep      (default: 7 — a rolling
+#                             week of daily backups)
 #   LIBRARY_BACKUP_EXTRA_DIR a second copy folder  (default: none)
 set -euo pipefail
 
@@ -31,7 +31,7 @@ DATA="$REPO/library-data.json"
 KEY="$REPO/library-secret.key"
 
 BACKUP_DIR="${LIBRARY_BACKUP_DIR:-$REPO/backups}"
-KEEP="${LIBRARY_BACKUP_KEEP:-1}"
+KEEP="${LIBRARY_BACKUP_KEEP:-7}"
 EXTRA_DIR="${LIBRARY_BACKUP_EXTRA_DIR:-}"
 
 LOG="$BACKUP_DIR/backup.log"
