@@ -289,6 +289,39 @@ function isSeeded() {
   return !!(state && ((state.books && state.books.length) || (state.users && state.users.length)));
 }
 
+// Non-admin clients (students, the kiosk) are allowed to change only the
+// *activity* collections — loans, holds, reviews, requests, charges, reading
+// log, clubs, announcements, kiosk log, settings. They must NEVER be able to
+// alter the catalog (books) or the accounts (users):
+//   - prevents a signed-in student from wiping the library (books/users) by
+//     POSTing an empty/minimal state to /api/state
+//   - prevents privilege escalation (a student promoting themself to admin)
+//   - the single exception: a student may edit their own non-role fields
+//     (e.g. display name via My Library)
+// This runs on the server, so it cannot be bypassed from the browser.
+function sanitizeNonAdminSave(incoming, sessUser) {
+  const curBooks = (state && state.books) || [];
+  const curUsers = (state && state.users) || [];
+  // Books: keep the full current set; a non-admin may only update fields of
+  // an existing book (e.g. an auto-enriched description), never add/delete.
+  const bookById = {};
+  (incoming.books || []).forEach(b => { if (b && b.id) bookById[b.id] = b; });
+  incoming.books = curBooks.map(cb => bookById[cb.id] || cb);
+  // Users: keep the full current set; a non-admin may only edit their own
+  // user object, and never change anyone's role or the admin account.
+  const userById = {};
+  (incoming.users || []).forEach(u => { if (u && u.id) userById[u.id] = u; });
+  incoming.users = curUsers.map(cu => {
+    if (cu.id !== sessUser.id) return cu; // leave every other account untouched
+    const mine = userById[cu.id] || cu;
+    // A non-admin may only edit their own display name. Everything else —
+    // role, username, password, class, grade — is pinned to the current value.
+    const copy = Object.assign({}, cu, { name: mine.name || cu.name });
+    return copy;
+  });
+  return incoming;
+}
+
 /* ------------------------- overdue / reminders ------------------------- */
 function overdueSummary() {
   if (!state) return [];
@@ -375,10 +408,16 @@ const server = http.createServer((req, res) => {
 
   if (urlPath === "/api/state" && method === "POST") {
     const seeded = isSeeded();
-    if (seeded && !sessionUser(req)) return json(res, 403, { ok: false, error: "Sign in required to save." });
+    const sessUser = sessionUser(req);
+    if (seeded && !sessUser) return json(res, 403, { ok: false, error: "Sign in required to save." });
     return readBody(req, body => {
       try {
         const incoming = JSON.parse(body);
+        // Non-admin saves may not touch the catalog or accounts (prevents
+        // wiping the library and privilege escalation).
+        if (seeded && sessUser && sessUser.role !== "admin") {
+          sanitizeNonAdminSave(incoming, sessUser);
+        }
         state = mergeState(incoming);
         persist();
         return json(res, 200, { ok: true });
@@ -387,6 +426,9 @@ const server = http.createServer((req, res) => {
   }
 
   if (urlPath === "/api/reset" && method === "POST") {
+    // Wiping all data is admin-only.
+    const admin = sessionUser(req);
+    if (!admin || admin.role !== "admin") return json(res, 403, { ok: false, error: "Admin only." });
     state = defaultState();
     persist();
     try { fs.unlinkSync(DATA_FILE); } catch (e) {}
