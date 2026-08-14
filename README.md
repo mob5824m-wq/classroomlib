@@ -47,13 +47,29 @@ Open **http://localhost:8080** and sign in with a demo account:
    school). Rename `Caddyfile.example` → `Caddyfile`, put in your DuckDNS
    hostname, then `caddy run`.
 6. **Start the app**: `node server.js` (listens on `0.0.0.0:8080`). To keep it
-   running automatically, use `deploy/classroom-library.service` (Linux) or
-   `deploy/start_library.bat` (Windows).
+   running automatically, use:
+   - **macOS (MacBook):** `bash deploy/setup-mac.sh` — one command that installs
+     Node + Caddy (via Homebrew, if needed) and loads five **launchd agents**
+     that start on login and stay running: the server, the DuckDNS updater,
+     Caddy (HTTPS), a keep-awake (`caffeinate -ims`), and a **daily backup**.
+   - **Linux:** `deploy/classroom-library.service` (systemd).
+   - **Windows:** `deploy/start_library.bat` (Startup folder).
 7. **Test** on your phone's mobile data (not home Wi-Fi):
    `https://myroomlibrary.duckdns.org`.
 
 > The first time the site is opened, `node server.js` prints the hostname it
 > was reached at, so you can confirm your DuckDNS address is routing correctly.
+
+### Back up the data (important)
+
+All books, students, loans and holds live in `library-data.json` on the hosting
+computer. `deploy/backup.sh` snapshots it — plus the encryption key needed to
+restore student passwords — into `backups/` and keeps a **rolling week** (the
+oldest is pruned as new ones are added). On macOS, `setup-mac.sh` schedules it
+daily at 03:00 automatically. **Copy those snapshots somewhere off the same
+machine** (a USB drive, network share, or iCloud folder) via
+`LIBRARY_BACKUP_EXTRA_DIR`, so a dead laptop doesn't lose the library. See
+[deploy/README.md](deploy/README.md).
 
 ### C. Public without port-forwarding (Cloudflare Tunnel)
 
@@ -172,7 +188,8 @@ After a scan you can check out (to yourself as a student, or to *any* student as
 
 **Easy student account creation.** In Admin → **Students** you can:
 - **+ Add student** — type a name and the username is auto-suggested (first name + last initial) with a generated password.
-- **Bulk add** — paste a list of names (one per line, optionally `Name | Class`) and it creates every account instantly, showing a printable table of usernames & passwords to hand out.
+- **Bulk add** — paste a list of names (one per line, optionally `Name | Class`) and it creates every account instantly. By default each student gets their **own unique password** (or a shared default, your choice) and you can **Print handout** for cut-apart slips.
+- **Reset to unique passwords** — one click gives every student a brand-new random password and opens a printable handout, great for the start of the year.
 
 
 **Shared backend — all devices see the same data.** The site now runs on a real
@@ -325,7 +342,9 @@ classroomlib/
 │ └── home.js Home page logic
 ├── server.js Node backend (shared data, auth, sessions, encryption)
 ├── Caddyfile.example Free HTTPS (DuckDNS) config
-├── deploy/ DuckDNS updater, systemd service, Windows autostart
+├── deploy/ Auto-start & backup: DuckDNS updater, systemd service,
+│             Windows autostart, macOS launchd setup (setup-mac.sh),
+│             and daily backup script (backup.sh)
 ├── manifest.webmanifest + sw.js PWA (add to home screen, offline)
 ├── HOSTING.md Home hosting + dynamic DNS + HTTPS guide
 └── README.md You are here
@@ -346,7 +365,9 @@ database/API instead, and every page keeps working unchanged.
 
 > **Backup note:** the encrypted passwords rely on the server secret key
 > (`library-secret.key`, gitignored). Back it up alongside `library-data.json` —
-> losing it would make student passwords undecryptable.
+> losing it would make student passwords undecryptable. `deploy/backup.sh`
+> snapshots **both** files daily (rolling 7-day history) and can copy them to a
+> second location; on macOS this runs automatically via `setup-mac.sh`.
 
 ---
 
