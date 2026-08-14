@@ -31,7 +31,7 @@ URL="https://www.duckdns.org/update?domains=$DUCKDNS_DOMAIN&token=$DUCKDNS_TOKEN
 RESP=$(curl -s -k "$URL")
 
 if [ "$RESP" = "OK" ]; then
-  echo "$(date '+%F %T') DuckDNS update OK ($DUCKDNS_DOMAIN.duckdns.org)"
+  echo "$(date '+%Y-%m-%d %H:%M:%S') DuckDNS update OK ($DUCKDNS_DOMAIN.duckdns.org)"
 else
-  echo "$(date '+%F %T') DuckDNS update FAILED: $RESP"
+  echo "$(date '+%Y-%m-%d %H:%M:%S') DuckDNS update FAILED: $RESP"
 fi

@@ -35,14 +35,14 @@ KEEP="${LIBRARY_BACKUP_KEEP:-7}"
 EXTRA_DIR="${LIBRARY_BACKUP_EXTRA_DIR:-}"
 
 LOG="$BACKUP_DIR/backup.log"
-STAMP="$(date +%F_%H%M%S)"
+STAMP="$(date +%Y-%m-%d_%H%M%S)"
 DEST="$BACKUP_DIR/library-backup-$STAMP.json"
 KEYDEST="$BACKUP_DIR/library-secret-$STAMP.key"
 
 mkdir -p "$BACKUP_DIR"
 
 if [ ! -f "$DATA" ]; then
-  echo "$(date '+%F %T') SKIP: $DATA not found (has the server run yet?)" >> "$LOG"
+  echo "$(date '+%Y-%m-%d %H:%M:%S') SKIP: $DATA not found (has the server run yet?)" >> "$LOG"
   echo "No data to back up yet."
   exit 0
 fi
@@ -75,6 +75,6 @@ for k in "$BACKUP_DIR"/library-secret-*.key; do
   [ -f "$BACKUP_DIR/library-backup-$stamp.json" ] || rm -f "$k"
 done
 
-echo "$(date '+%F %T') OK: $DEST" >> "$LOG"
+echo "$(date '+%Y-%m-%d %H:%M:%S') OK: $DEST" >> "$LOG"
 echo "Backup written to $DEST"
 if [ -n "$EXTRA_DIR" ]; then echo "Second copy in $EXTRA_DIR"; fi

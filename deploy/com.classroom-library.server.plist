@@ -4,8 +4,8 @@
   macOS launchd agent: auto-starts the Classroom Library Node server when you
   log in and keeps it running (restarts it if it crashes).
 
-  SETUP: run deploy/setup-mac.sh — it fills in __REPO__/__NODE__ for you and
-  installs this into ~/Library/LaunchAgents/. You normally don't edit this
+  SETUP: run deploy/setup-mac.sh — it fills in the repo and node paths for you
+  and installs this into ~/Library/LaunchAgents/. You normally don't edit this
   file by hand.
 -->
 <plist version="1.0">

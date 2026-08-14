@@ -5,7 +5,8 @@
   when it's loaded). See deploy/backup.sh for what it copies and how to send a
   second copy to a USB drive / network share.
 
-  SETUP: run deploy/setup-mac.sh — it fills in __REPO__ and loads this agent.
+  SETUP: run deploy/setup-mac.sh — it fills in the repo path and loads this
+  agent.
 
   Log: /tmp/classroom-library-backup.log   (also see <repo>/backups/backup.log)
 -->

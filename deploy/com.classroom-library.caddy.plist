@@ -5,8 +5,8 @@
   always on. Before enabling, rename Caddyfile.example -> Caddyfile and put
   your real DuckDNS hostname in it.
 
-  SETUP: run deploy/setup-mac.sh — it fills in __REPO__/__CADDY__ for you and
-  installs this into ~/Library/LaunchAgents/.
+  SETUP: run deploy/setup-mac.sh — it fills in the repo and caddy paths for you
+  and installs this into ~/Library/LaunchAgents/.
 
   Logs: /tmp/classroom-library-caddy.log
 -->

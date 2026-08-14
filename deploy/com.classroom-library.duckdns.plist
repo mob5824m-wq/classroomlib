@@ -6,7 +6,8 @@
 
   Before enabling this, fill in your domain + token:
       cp deploy/duckdns.conf.example deploy/duckdns.conf   (edit it)
-  then run deploy/setup-mac.sh, which installs and loads this agent.
+  then run deploy/setup-mac.sh, which fills in the repo path, installs and
+  loads this agent.
 
   See the log at /tmp/classroom-library-duckdns.log
 -->
