@@ -1,0 +1,28 @@
+# systemd service to run the Classroom Library server automatically and keep it
+# alive across reboots/crashes (Linux / Raspberry Pi).
+#
+# SETUP
+#   1. Edit the three paths below to match where you cloned the repo and your
+#      username:  WorkingDirectory, ExecStart (node path), User.
+#   2. Install & enable:
+#        sudo cp classroom-library.service /etc/systemd/system/
+#        sudo systemctl daemon-reload
+#        sudo systemctl enable --now classroom-library
+#   3. Check it's running / see logs:
+#        systemctl status classroom-library
+#        journalctl -u classroom-library -f
+
+[Unit]
+Description=Classroom Library server
+After=network.target
+
+[Service]
+WorkingDirectory=/home/pi/classroomlib
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=3
+User=pi
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target

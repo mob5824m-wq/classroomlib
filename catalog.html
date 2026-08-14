@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+ <title>Catalog · Our Classroom Library</title>
+ <link rel="stylesheet" href="css/style.css?v=40">
+ <script defer src="js/store.js?v=40"></script>
+ <script defer src="js/app.js?v=40"></script>
+  <script defer src="js/a11y.js?v=40"></script>
+ <script defer src="js/barcode.js?v=40"></script>
+ <script defer src="js/covers.js?v=40"></script>
+ <script defer src="js/scanner.js?v=40"></script>
+  <script defer src="js/scan.js?v=40"></script>
+  <script defer src="js/request.js?v=40"></script>
+  <script defer src="js/catalog.js?v=40"></script>
+</head>
+<body>
+ <div id="scan-mode" hidden></div>
+ <header class="topbar">
+ <div class="topbar-inner">
+ <a class="brand" href="index.html">
+ <span class="logo"></span>
+ <span>Room 204 Library<small>Grade 7–8</small></span></a>
+ <nav class="nav">
+ <a data-page="index.html" href="index.html">Home</a>
+ <a data-page="catalog.html" href="catalog.html">Catalog</a>
+        <a data-page="kiosk.html" href="kiosk.html">Checkout</a>
+ <a data-page="how-to-check-out.html" href="how-to-check-out.html">How to Check Out</a>
+ <a data-page="my-library.html" href="my-library.html">My Library</a>
+        <a data-page="sitemap.html" href="sitemap.html">Site Map</a>
+        <a data-page="guide.html" href="guide.html">Guide</a>
+ </nav>
+ <div id="user-area"></div>
+ </div>
+ </header>
+
+ <main class="container">
+ <div class="page-head" style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap">
+ <div>
+ <h1> The Catalog</h1>
+ <p class="muted">Search our shelves, filter by genre, and find your next great read.</p>
+ </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-outline" onclick="tryRequest()">Request a book</button>
+        <button class="btn btn-primary" onclick="tryScan()">Scan a barcode</button>
+      </div>
+    </div>
+
+    <section class="card" style="margin-bottom:20px">
+ <div class="filters">
+ <div class="field search-wrap">
+ <span class="search-icon"></span>
+ <input id="q" type="search" placeholder="Search by title or author…">
+ </div>
+ <div class="field">
+ <label for="f-genre">Genre</label>
+ <select id="f-genre"><option value="">All genres</option></select>
+ </div>
+ <div class="field">
+ <label for="f-type">Type</label>
+ <select id="f-type"><option value="">All types</option></select>
+ </div>
+ <div class="field">
+ <label for="f-level">Reading level</label>
+ <select id="f-level"><option value="">Any level</option></select>
+ </div>
+ <div class="field">
+ <label for="f-avail">Availability</label>
+ <select id="f-avail">
+ <option value="">Any</option>
+ <option value="avail">Available now</option>
+ <option value="out">Checked out</option>
+ </select>
+ </div>
+ <div class="field">
+ <label for="f-sort">Sort by</label>
+ <select id="f-sort">
+ <option value="title">Title (A–Z)</option>
+ <option value="popular">Most popular</option>
+ <option value="newest">Newest</option>
+ </select>
+ </div>
+   <div class="field">
+   <label>View</label>
+   <div class="seg" id="view-toggle">
+   <button class="seg-btn active" data-view="grid">Grid</button>
+   <button class="seg-btn" data-view="shelf">Shelves</button>
+   </div>
+   </div>
+   <button class="btn btn-outline btn-sm" id="clear-filters">Clear</button>
+   </div>
+   <p class="small muted" id="result-count"></p>
+   </section>
+
+ <div class="book-grid" id="results"></div>
+ </main>
+
+  <!-- Book detail modal -->
+  <div class="modal" id="detail-modal">
+    <div class="modal-card wide" id="detail-body"></div>
+  </div>
+
+  <!-- Request a book modal -->
+  <div class="modal" id="request-modal">
+    <div class="modal-card" id="request-modal-body"></div>
+  </div>
+
+ <footer>
+ <div class="container">
+ <strong>Room 204 Classroom Library</strong> · Questions? Ask your librarian!
+ </div>
+ </footer>
+</body>
+</html>

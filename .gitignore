@@ -1,0 +1,8 @@
+# Server-generated data (per-site, should not be committed)
+library-data.json
+reminder-log.txt
+node_modules/
+library-secret.key
+library-sessions.json
+# Automated backup snapshots (deploy/backup.sh)
+backups/

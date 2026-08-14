@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>Classroom Checkout · Our Classroom Library</title>
+  <link rel="stylesheet" href="css/style.css?v=40">
+  <script defer src="js/store.js?v=40"></script>
+  <script defer src="js/app.js?v=40"></script>
+  <script defer src="js/a11y.js?v=40"></script>
+  <script defer src="js/barcode.js?v=40"></script>
+  <script defer src="js/covers.js?v=40"></script>
+  <script defer src="js/scanner.js?v=40"></script>
+  <script defer src="js/kiosk.js?v=40"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="index.html">
+        <span class="logo"></span>
+        <span>Room 204 Library<small>Checkout Kiosk</small></span>
+      </a>
+      <nav class="nav">
+        <a data-page="index.html" href="index.html">Home</a>
+        <a data-page="catalog.html" href="catalog.html">Catalog</a>
+        <a data-page="kiosk.html" href="kiosk.html">Checkout</a>
+        <a data-page="my-library.html" href="my-library.html">My Library</a>
+        <a data-page="sitemap.html" href="sitemap.html">Site Map</a>
+        <a data-page="guide.html" href="guide.html">Guide</a>
+      </nav>
+      <div id="user-area"></div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="page-head">
+      <h1>Classroom Checkout</h1>
+      <p class="muted">Choose an option below, then scan a book's barcode.</p>
+    </div>
+
+    <!-- Mode options -->
+    <div class="kiosk-options" id="kiosk-options">
+      <button class="kiosk-option" data-mode="checkout">
+        <span class="kiosk-option-title">Check Out</span>
+        <span class="kiosk-option-sub">Take a book home</span>
+      </button>
+      <button class="kiosk-option" data-mode="checkin">
+        <span class="kiosk-option-title">Check In</span>
+        <span class="kiosk-option-sub">Return a book</span>
+      </button>
+    </div>
+
+    <!-- ===================== CHECK OUT ===================== -->
+    <section id="mode-checkout" class="kiosk-panel" hidden>
+      <div class="card">
+        <div class="card-head"><h3>Check out a book</h3>
+          <button class="btn btn-ghost btn-sm" data-back style="color:var(--ink-soft);border-color:var(--line)">Back</button>
+        </div>
+        <p class="muted small">Scan the book's barcode, then pick the student who is checking it out.</p>
+        <div class="kiosk-scan-buttons">
+          <button class="btn btn-primary btn-lg" id="kiosk-scan-btn">Open scanner</button>
+        </div>
+        <form id="kiosk-manual" style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+          <input id="kiosk-barcode" inputmode="numeric" placeholder="Or type the barcode number…" style="flex:1;min-width:200px">
+          <button class="btn btn-amber" type="submit">Check out</button>
+        </form>
+        <div id="kiosk-result" style="margin-top:14px"></div>
+      </div>
+    </section>
+
+    <!-- ===================== CHECK IN ===================== -->
+    <section id="mode-checkin" class="kiosk-panel" hidden>
+      <div class="card">
+        <div class="card-head"><h3>Check in a book</h3>
+          <button class="btn btn-ghost btn-sm" data-back style="color:var(--ink-soft);border-color:var(--line)">Back</button>
+        </div>
+        <p class="muted small">Scan the book's barcode to return it to the library.</p>
+        <div class="kiosk-scan-buttons">
+          <button class="btn btn-primary btn-lg" id="kiosk-checkin-scan">Open scanner</button>
+        </div>
+        <form id="kiosk-checkin-manual" style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+          <input id="kiosk-checkin-barcode" inputmode="numeric" placeholder="Or type the barcode number…" style="flex:1;min-width:200px">
+          <button class="btn btn-amber" type="submit">Check in</button>
+        </form>
+        <div id="kiosk-checkin-result" style="margin-top:14px"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <strong>Room 204 Classroom Library</strong> · Checkout kiosk
+    </div>
+  </footer>
+</body>
+</html>
