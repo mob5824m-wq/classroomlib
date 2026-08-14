@@ -397,6 +397,15 @@ const server = http.createServer((req, res) => {
 
   /* ----------------------------- static ----------------------------- */
   let file = urlPath === "/" ? "index.html" : urlPath.replace(/^\/+/, "");
+  // Never serve sensitive server files, source internals, or hidden/dot paths.
+  const FORBIDDEN = new Set([
+    "library-data.json", "library-secret.key", "library-sessions.json",
+    "reminder-log.txt", "server.js", "package.json", "package-lock.json",
+  ]);
+  const segments = file.split("/").filter(Boolean);
+  const blocked = segments.some(seg =>
+    seg.startsWith(".") || FORBIDDEN.has(seg) || seg === "node_modules" || seg === ".git");
+  if (blocked) { res.writeHead(403); res.end("Forbidden"); return; }
   let full = path.normalize(path.join(ROOT, file));
   if (!full.startsWith(ROOT)) { res.writeHead(403); res.end("Forbidden"); return; }
   fs.stat(full, (err, stat) => {
