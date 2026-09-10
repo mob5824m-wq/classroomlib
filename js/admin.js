@@ -1300,6 +1300,26 @@
     bindBackup();
     bindReminders();
     render();
+    // Periodic state polling to keep admin page updated in real-time
+    setInterval(() => {
+      fetch("/api/state")
+        .then((res) => res.json())
+        .then((state) => {
+          const currentOut = parseInt($("#o-out").textContent);
+          const newOut = state.loans.filter((l) => !l.returned).length;
+          if (newOut !== currentOut) $("#o-out").textContent = newOut;
+          const currentOverdue = parseInt($("#o-overdue").textContent);
+          const newOverdue = state.loans.filter((l) => S.isOverdue(l, state)).length;
+          if (newOverdue !== currentOverdue) $("#o-overdue").textContent = newOverdue;
+          const currentStudents = parseInt($("#o-students").textContent);
+          const newStudents = state.users.filter((u) => u.role === "student").length;
+          if (newStudents !== currentStudents) $("#o-students").textContent = newStudents;
+          const currentHolds = parseInt($("#o-holds").textContent);
+          const newHolds = state.holds.length;
+          if (newHolds !== currentHolds) $("#o-holds").textContent = newHolds;
+        })
+        .catch(() => {/* ignore fetch errors */});
+    }, 30000); // 30 seconds
  window.onAuthChange = render;
  // Give every student a unique password + print a handout (Students tab).
  const rp = document.querySelector("[data-reset-passwords]");
