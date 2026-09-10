@@ -203,19 +203,25 @@ const Store = (function () {
 
   function load() {
     if (_cache) return _cache;
+    // Check localStorage first to preserve offline state and checkouts
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) {
+        _cache = JSON.parse(raw);
+        _mode = "local";
+        return _cache;
+      }
+    } catch (e) { /* ignore */ }
+    // localStorage fallback failed, try server
     const fromServer = loadFromServer();
     if (fromServer) {
       _mode = "server";
       _cache = fromServer;
       return _cache;
     }
-    // localStorage fallback
+    // No data available; seed empty state with demo users/books
     _mode = "local";
-    try {
-      const raw = localStorage.getItem(KEY);
-      _cache = raw ? JSON.parse(raw) : null;
-    } catch (e) { _cache = null; }
-    return _cache;
+    return null;
   }
 
   function seedIfEmpty() {
