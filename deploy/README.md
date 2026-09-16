@@ -20,7 +20,8 @@ You do not need any of it to run the site locally.
 | `backup.sh` | Daily snapshot of the real data (`library-data.json` + the encryption key) to timestamped files; keeps a rolling week (default 7) and can copy to a USB drive/network share. | All |
 | `com.classroom-library.backup.plist` | LaunchAgent: runs `backup.sh` every day at 03:00. | macOS (launchd) |
 | `setup-mac.sh` | One command: checks/installs node + caddy, installs and loads the macOS agents. | macOS |
-| `../Caddyfile.example` | The only config Caddy needs — free HTTPS, routes to the app on port 8080. | All |
+| `../Caddyfile.example` | The only config Caddy needs for a **one-app** machine — free HTTPS, routes to the app on port 8080. | All |
+| `../Caddyfile.dual.example` + `dual-host-pi.md` | **Two apps, one Pi:** one shared Caddy serving Book Recs (`:8080`) and Classroom Library (`:8081`) on two DuckDNS hostnames. The `.md` is the full guide. | Linux / Raspberry Pi |
 
 ## The 30-second mental model
 
@@ -104,6 +105,17 @@ it (plus the encryption key needed to restore student passwords) at 03:00.
   `library-data.json`, because that key is required to decrypt student
   passwords on a restore.
 
+## Two apps on one Pi (Classroom Library + Book Recs)
+
+One Pi, two DuckDNS hostnames, one shared Caddy: Book Recs on `:8080`,
+Classroom Library on `:8081`, one DuckDNS updater run with both hostnames.
+Everything — port contract, shared Caddyfile, systemd units, router/firewall,
+troubleshooting — is in **[dual-host-pi.md](dual-host-pi.md)**, with the
+ready-to-use config in [`../Caddyfile.dual.example`](../Caddyfile.dual.example).
+Classroom-book-recs defines the contract; this repo mirrors it (checklist at
+the bottom of that guide). Do **not** run this repo's single-site Caddyfile
+or a second DuckDNS cron job when co-hosting.
+
 ## Quick start — Linux / Windows
 
 1. **DuckDNS hostname** — create one at https://www.duckdns.org, note the token.
@@ -114,9 +126,11 @@ it (plus the encryption key needed to restore student passwords) at 03:00.
    **external 443 → that computer → 443** (or → 8443 if you use the alternative
    Caddy block — see `../Caddyfile.example`).
 4. **Caddy** — rename `../Caddyfile.example` to `Caddyfile`, put your real
-   hostname in it, install Caddy, run `caddy run`.
+   hostname in it, install Caddy, run `caddy run`. (Both apps on one Pi? Use
+   `../Caddyfile.dual.example` instead — see [dual-host-pi.md](dual-host-pi.md).)
 5. **App** — start the server (`node server.js`, or the systemd/service files
-   above). Confirm it prints `Listening on: 0.0.0.0:8080`.
+   above). Confirm it prints `Listening on: 0.0.0.0:8080` (or `:8081` if the
+   systemd unit's `CLASSROOM_PORT=8081` pin is in effect).
 6. **Test** — on your phone's mobile data (not home Wi-Fi) open
    `https://myroomlibrary.duckdns.org`.
 

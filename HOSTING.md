@@ -55,6 +55,11 @@ scanning works because it's HTTPS.
 > The free Tunnel URL already updates automatically if your home IP changes,
 > so there's no separate DDNS account to maintain.
 
+> Co-hosting with [Book Recs](https://github.com/mob5824m-wq/Classroom-book-recs)
+> on the same Pi? Add **two** public hostnames on the same tunnel: Book Recs →
+> `http://localhost:8080`, Library → `http://localhost:8081`. Ports still follow
+> [deploy/dual-host-pi.md](deploy/dual-host-pi.md); you skip Caddy and DuckDNS.
+
 ---
 
 ## Option B — Classic dynamic DNS (DuckDNS / No-IP) + HTTPS
@@ -87,6 +92,9 @@ your home IP changes.
      ```
      */5 * * * * /home/pi/classroomlib/deploy/duckdns-update.sh >>/home/pi/duckdns.log 2>&1
      ```
+     Hosting both apps on one Pi? Put both hostnames in `duckdns.conf`
+     (`DUCKDNS_DOMAINS=mybookrecs,myroomlibrary`) and run the updater from
+     **one** repo only — see [deploy/dual-host-pi.md](deploy/dual-host-pi.md).
    - **Windows:** edit `deploy/duckdns-update.bat` with your domain + token, run
      it once, then create a scheduled task (instructions inside the file). Or
      download the official DuckDNS updater and add it to Startup.
@@ -108,11 +116,15 @@ your home IP changes.
      DuckDNS hostname in it (e.g. `myroomlibrary.duckdns.org`).
    - Run `caddy run`. Caddy auto-fetches and renews your Let's Encrypt
      certificate and routes HTTPS to the app on port `8080`.
+   - Hosting both apps on this machine? Don't use this single-site Caddyfile —
+     use [`Caddyfile.dual.example`](Caddyfile.dual.example) instead (one Caddy,
+     two hostnames). See [deploy/dual-host-pi.md](deploy/dual-host-pi.md).
 
 6. **Start the app** (`node server.js`) and confirm it prints
    `Listening on: 0.0.0.0:8080`. To keep it running automatically, use
-   `deploy/classroom-library.service` (Linux/systemd) or
-   `deploy/start_library.bat` (Windows) — see below.
+   `deploy/classroom-library.service` (Linux/systemd — ships pinned to
+   `:8081` for co-hosting; hosting this app alone, set `CLASSROOM_PORT=8080`
+   in the unit) or `deploy/start_library.bat` (Windows) — see below.
 
 7. **Test from outside your home** — on a phone's data (not your Wi-Fi), open
    `https://myroomlibrary.duckdns.org`. If it loads, you're live.
@@ -132,6 +144,43 @@ Students at school
 - **Primary:** Caddy binds `443`, router forwards `443 → computer:443`.
 - **Alternative (443 busy):** use the `:8443` block in `Caddyfile.example`,
   Caddy binds `8443`, router forwards `443 → computer:8443`.
+
+---
+
+## Two apps on one machine — Classroom Library + Book Recs (two DuckDNS sites)
+
+Same idea as Option B, but one computer (e.g. a Raspberry Pi 4) serves **both**
+apps, each on its **own DuckDNS hostname** with free HTTPS. Full guide:
+**[deploy/dual-host-pi.md](deploy/dual-host-pi.md)** — the short version:
+
+```
+https://myroomlibrary.duckdns.org      https://mybookrecs.duckdns.org
+        \__ ONE Caddy (443+80, routes by hostname) __/
+                |                              |
+        localhost:8081                 localhost:8080
+        Classroom Library (this repo)  Book Recs
+```
+
+- **Ports are split:** Classroom Library `:8081`, Book Recs `:8080` — pinned
+  in the systemd units (`CLASSROOM_PORT=8081` / `BOOKRECS_PORT=8080`) so they
+  can never drift into each other. Env wins over the default of 8080, so a
+  standalone `node server.js` is unchanged.
+- **One Caddy, not two:** only one process may bind 443. Use the shared
+  [`Caddyfile.dual.example`](Caddyfile.dual.example) — the single-site
+  `Caddyfile.example` files are for one-app machines only.
+- **One DuckDNS updater:** list both hostnames comma-separated in
+  `deploy/duckdns.conf` (`DUCKDNS_DOMAINS=mybookrecs,myroomlibrary`) and run
+  the updater + cron job from **one** repo only.
+- **Router** forwards **both** 443 → Pi:443 **and** 80 → Pi:80 (cert renewals
+  use port 80); **firewall** allows both app ports
+  (`sudo ufw allow 8080,8081/tcp`) so the LAN URLs
+  (`http://<pi-ip>:8080` and `http://<pi-ip>:8081`) keep working at home.
+- Nothing else collides: cookies (`classroom_session` vs `bookrecs_session`),
+  data files and systemd unit names are all distinct.
+
+[Classroom-book-recs](https://github.com/mob5824m-wq/Classroom-book-recs)
+defines that contract — this repo mirrors it. The walkthrough (and this
+repo's checklist) is [deploy/dual-host-pi.md](deploy/dual-host-pi.md).
 
 ### 2. Find your home IP & set up port forwarding
 1. Find your computer's LAN IP:
@@ -157,6 +206,8 @@ automatically and keeps your DDNS hostname covered.
  reverse_proxy localhost:8080
  }
  ```
+   Hosting both apps? Use [`Caddyfile.dual.example`](Caddyfile.dual.example)
+   instead (Library → `localhost:8081`, Book Recs → `localhost:8080`).
 3. Run `caddy run` (keep it running). Caddy auto-renews the certificate.
 4. Point the **port-forward** (external `443`) at the computer running Caddy.
 
@@ -195,8 +246,11 @@ Logs: `/tmp/classroom-library.log`, `/tmp/classroom-library-duckdns.log`,
    [NSSM](https://nssm.cc) and run `node server.js` as a Windows service.)
 
 ### Linux / Raspberry Pi (systemd)
-A ready-to-run unit is included at `deploy/classroom-library.service`. Edit the
-paths in it, then:
+A ready-to-run unit is included at `deploy/classroom-library.service`. It pins
+`CLASSROOM_PORT=8081` so this app can sit next to Book Recs on `:8080` without
+colliding (see [deploy/dual-host-pi.md](deploy/dual-host-pi.md)). Hosting this
+app alone? Change that Environment line to `8080` (or delete it) so it matches
+`Caddyfile.example`. Edit the paths in it, then:
 ```bash
 sudo cp deploy/classroom-library.service /etc/systemd/system/
 sudo systemctl daemon-reload
@@ -210,6 +264,8 @@ Check status / logs with `systemctl status classroom-library` and
 ## LAN access without the internet (backup)
 If the internet is down, the site still works **on your home Wi-Fi** at
 `http://<your-computer's-LAN-IP>:8080` (e.g. `http://192.168.1.50:8080`).
+When co-hosted with Book Recs the Library is on **`:8081`** instead (Book Recs
+keeps `:8080`) — see [deploy/dual-host-pi.md](deploy/dual-host-pi.md).
 Note that **camera scanning needs a secure (HTTPS) context**, so over plain
 `http://192.168.1.x` only the typed-barcode, search, and mouse workflows work.
 For camera scanning you'll use the public HTTPS URL (Option A or B).
@@ -249,9 +305,11 @@ For camera scanning you'll use the public HTTPS URL (Option A or B).
 | Task | Command / Where |
 |------|-----------------|
 | Start locally | `node server.js` → `http://localhost:8080` |
-| Pick a port | `PORT=9090 node server.js` |
+| Pick a port | `PORT=9090 node server.js` (or `CLASSROOM_PORT=8081` when co-hosted) |
 | Easiest public HTTPS | Cloudflare Tunnel (Option A) |
 | Own hostname + HTTPS | DuckDNS + Caddy (Option B) |
+| Library + Book Recs on one Pi | `deploy/dual-host-pi.md` + `Caddyfile.dual.example` (`:8081` / `:8080`) |
+| Update both DuckDNS hostnames | `DUCKDNS_DOMAINS=a,b` in `deploy/duckdns.conf`, updater run from one repo |
 | Auto-start (macOS) | `bash deploy/setup-mac.sh` (launchd agents) |
 | Auto-start (Linux) | systemd unit (above) |
 | Auto-start (Windows) | Startup folder `.bat` / NSSM |

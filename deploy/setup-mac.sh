@@ -12,6 +12,10 @@
 #        - com.classroom-library.caffeinate  (keep the Mac awake while powered)
 #        - com.classroom-library.backup      (daily snapshot of the data)
 #
+# Hosting this app AND Classroom Book Recs on one Raspberry Pi instead?
+# Don't run this Mac setup — see deploy/dual-host-pi.md (one shared Caddy,
+# this app on :8081, Book Recs on :8080).
+#
 # Run it from the repo folder:
 #     bash deploy/setup-mac.sh
 set -euo pipefail

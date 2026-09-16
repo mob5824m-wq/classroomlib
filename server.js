@@ -8,6 +8,7 @@
  *   cookies, passwords never sent to the browser. (#2)
  *
  *   node server.js            # serve on 0.0.0.0:8080
+ *   CLASSROOM_PORT=8081 node server.js   # co-host with Book Recs (see deploy/dual-host-pi.md)
  *
  * API:
  *   GET  /api/state             -> shared state (passwords redacted)
@@ -28,6 +29,10 @@ const crypto = require("crypto");
 const os = require("os");
 
 const ROOT = __dirname;
+// Precedence: PORT env → CLASSROOM_PORT env → 8080.
+// The systemd unit pins CLASSROOM_PORT=8081 so this app can sit next to
+// Book Recs (:8080) on one Pi — see deploy/dual-host-pi.md. Standalone
+// `node server.js` still defaults to 8080.
 const PORT = process.env.PORT || process.env.CLASSROOM_PORT || 8080;
 const HOST = "0.0.0.0";
 const DATA_FILE = path.join(ROOT, "library-data.json");
@@ -469,6 +474,9 @@ server.listen(PORT, HOST, () => {
   console.log(`   On your network:   http://${lan || "<this-computer's-LAN-IP>"}:${PORT}`);
   console.log(`   Data file:         ${DATA_FILE}`);
   console.log("   Server-side auth: passwords hashed, httpOnly session cookies");
+  if (String(PORT) === "8081") {
+    console.log("   Co-host port 8081 — Book Recs should be on :8080 (see deploy/dual-host-pi.md)");
+  }
   console.log("");
   console.log("   First-launch check (DuckDNS / hosting):");
   if (!lan) {
