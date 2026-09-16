@@ -1,8 +1,13 @@
 # Fill in your DuckDNS details, then rename this file to  duckdns.conf
 # Get your token at https://www.duckdns.org (after signing in with Google/GitHub).
 
-# The subdomain only (no .duckdns.org). For "myroomlibrary.duckdns.org" use:
-DUCKDNS_DOMAIN=myroomlibrary
+# The subdomain(s) only (no .duckdns.org). For "myroomlibrary.duckdns.org" use:
+DUCKDNS_DOMAINS=myroomlibrary
+
+# Hosting Classroom Library AND Book Recs on one Pi? List BOTH hostnames,
+# comma-separated — one update call keeps both pointed at your home IP:
+#DUCKDNS_DOMAINS=mybookrecs,myroomlibrary
+# (See dual-host-pi.md. Run the updater from ONE repo only, not both.)
 
 # The token from your DuckDNS dashboard.
 DUCKDNS_TOKEN=your-token-here

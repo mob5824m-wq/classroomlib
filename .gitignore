@@ -6,3 +6,6 @@ library-secret.key
 library-sessions.json
 # Automated backup snapshots (deploy/backup.sh)
 backups/
+# Local hosting config (DuckDNS token + real hostnames)
+Caddyfile
+deploy/duckdns.conf

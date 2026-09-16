@@ -11,6 +11,13 @@
 #   3. Check it's running / see logs:
 #        systemctl status classroom-library
 #        journalctl -u classroom-library -f
+#
+# PORT (matters when co-hosting with Classroom Book Recs on one Pi — see
+# dual-host-pi.md): CLASSROOM_PORT=8081 below pins this app to port 8081.
+# Env wins over the default of 8080 (`PORT` / `CLASSROOM_PORT` → 8080), so
+# `node server.js` without this unit still listens on 8080 (standalone).
+# Hosting ONLY this app via systemd? Change the line below to 8080 (or delete
+# it) so it matches Caddyfile.example. Dual-host: leave it at 8081.
 
 [Unit]
 Description=Classroom Library server
@@ -23,6 +30,7 @@ Restart=always
 RestartSec=3
 User=pi
 Environment=NODE_ENV=production
+Environment=CLASSROOM_PORT=8081
 
 [Install]
 WantedBy=multi-user.target

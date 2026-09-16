@@ -56,13 +56,21 @@ Open **http://localhost:8080** and sign in with a demo account:
      Node + Caddy (via Homebrew, if needed) and loads five **launchd agents**
      that start on login and stay running: the server, the DuckDNS updater,
      Caddy (HTTPS), a keep-awake (`caffeinate -ims`), and a **daily backup**.
-   - **Linux:** `deploy/classroom-library.service` (systemd).
+   - **Linux / Raspberry Pi:** `deploy/classroom-library.service` (systemd).
+     The unit pins `CLASSROOM_PORT=8081` for co-hosting with Book Recs; hosting
+     this app alone, change it to `8080` (or delete the line). Same Pi as Book
+     Recs? See [deploy/dual-host-pi.md](deploy/dual-host-pi.md).
    - **Windows:** `deploy/start_library.bat` (Startup folder).
 7. **Test** on your phone's mobile data (not home Wi-Fi):
    `https://myroomlibrary.duckdns.org`.
 
 > The first time the site is opened, `node server.js` prints the hostname it
 > was reached at, so you can confirm your DuckDNS address is routing correctly.
+
+> **Same Raspberry Pi 4 as [Classroom-book-recs](https://github.com/mob5824m-wq/Classroom-book-recs)?**
+> Two DuckDNS sites, one shared Caddy, this app on `:8081` and Book Recs on
+> `:8080`. Don't run two Caddies or two DuckDNS updaters. Full walkthrough:
+> [deploy/dual-host-pi.md](deploy/dual-host-pi.md).
 
 ### Back up the data (important)
 
@@ -357,10 +365,11 @@ classroomlib/
 │ ├── admin.js Admin console logic
 │ └── home.js Home page logic
 ├── server.js Node backend (shared data, auth, sessions, encryption)
-├── Caddyfile.example Free HTTPS (DuckDNS) config
+├── Caddyfile.example Free HTTPS (DuckDNS) config — one app
+├── Caddyfile.dual.example Shared Caddy for this app (:8081) + Book Recs (:8080)
 ├── deploy/ Auto-start & backup: DuckDNS updater, systemd service,
 │             Windows autostart, macOS launchd setup (setup-mac.sh),
-│             and daily backup script (backup.sh)
+│             daily backup (backup.sh), dual-host Pi guide (dual-host-pi.md)
 ├── manifest.webmanifest + sw.js PWA (add to home screen, offline)
 ├── HOSTING.md Home hosting + dynamic DNS + HTTPS guide
 └── README.md You are here
